@@ -152,7 +152,7 @@ const ddayText=n=>n===1?'내일':`${n}일 뒤`;
 function render(){
   document.body.classList.toggle('kid',!!(DOC&&KID));
   $('#top').hidden=!DOC||KID||TAB==='today';$('#tabs').hidden=!DOC||KID;
-  if(!CODE||!DOC){if(CODE&&!DOC){app.innerHTML='<p class="empty" style="padding-top:80px">우리집 보드를 불러오는 중이에요…</p>';return}return renderStart()}
+  if(!CODE||!DOC){if(CODE&&!DOC){app.innerHTML=lastErr?`<div class="empty" style="padding-top:80px"><p>${esc(lastErr)}</p><button class="btn primary" id="retryLoad">다시 불러오기</button></div>`:'<p class="empty" style="padding-top:80px">우리집 보드를 불러오는 중이에요…</p>';if($('#retryLoad'))$('#retryLoad').onclick=()=>{lastErr='';render();load()};return}return renderStart()}
   document.title=DOC.name+' 보드';applySkin(DOC.skin);
   $('#famName').textContent=DOC.name;
   $('#kidBtn').textContent=childName()+' 보드';
