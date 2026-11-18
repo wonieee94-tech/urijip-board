@@ -316,7 +316,7 @@ function drawStatusEditor(){
 }
 function evItem(e){
   const pk=e.pickup==='tbd'?'데리러 갈 사람 정해야 해요':e.pickup?`${member(e.pickup)?.name||'?'} 픽업`:'';
-  return `<div class="item"><span class="tm${e.time?'':' all'}">${e.time?e.time:'하루 종일'}</span>
+  return `<div class="item"><span class="tm${e.time?'':' all'}">${e.time?e.time:'하루종일'}</span>
     <div class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><div class="sub">${esc(whoText(e))}${e.endTime?` · ${e.endTime}까지`:''}${e.repeat==='weekly'?' · 매주':e.repeat==='yearly'?' · 매년':''}</div>
     ${pk?`<span class="tag pick">🚗 ${esc(pk)}</span>`:''}${e.bring?`<span class="tag bring">🎒 ${esc(e.bring)}</span>`:''}</div>
     ${TAB==='plan'?`<span class="acts"><button class="x ed" data-edit="${e.id}" aria-label="일정 고치기">✏️</button><button class="x" data-del="${e.id}" aria-label="일정 지우기">✕</button></span>`:''}</div>`;

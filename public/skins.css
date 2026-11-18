@@ -192,3 +192,5 @@ html[data-skin] .ctrl{background:var(--tint);color:#fff}
 html[data-skin] .ctrl.alt{background:var(--card);color:var(--ink)}
 html[data-skin] .stars{background:var(--tint-soft);color:var(--tint-ink)}
 html[data-skin] .back{background:var(--tint-soft);color:var(--tint-ink)}
+/* 일정 목록 왼쪽 칸: "하루종일"이 두 줄로 쪼개지지 않게 */
+html[data-skin] .item .tm.all{white-space:nowrap;font-size:15px;letter-spacing:-.03em;padding-top:4px}
