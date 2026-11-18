@@ -445,21 +445,16 @@ function renderStudy(){
   if(full)$('#claim').onclick=()=>{if(confirm('선물을 줬나요? 포도송이를 비우고 새로 시작해요.'))act('claimGift',{},'새 포도송이를 시작해요')};
 }
 const stickers=()=>DOC.stickers||{board:[],gift:'',history:[]};
-// 공부 리포트: 연속 공부, 오늘 목표, 과목별 정답률, 최근 7일, 자주 틀리는 문제
+// 공부 리포트: 연속 공부, 오늘 목표, 최근 7일, 자주 틀리는 문제
 function studyReport(days,total){
   const P=Progress,sk=P.streak(DOC),done=P.doneToday(DOC),goal=DOC.goal?.subjects||2,learn=DOC.learn||{};
-  const acc={};for(const x of days)for(const[k,v]of Object.entries(learn[x.s]||{})){const a=(acc[k]||={r:0,t:0,n:0});a.r+=v.r;a.t+=v.t;a.n+=v.n}
-  const subj=Object.entries(Grapes.SUBJ).map(([k,v])=>{const a=acc[k],pct=a&&a.t?Math.round(a.r/a.t*100):null;
-    return `<div class="acc"><span class="an">${v.mark} ${v.name}</span><span class="ab"><i class="${pct==null?'':pct>=75?'good':pct>=50?'mid':'low'}" style="width:${pct||0}%"></i></span>
-      <span class="av">${pct==null?'<small>아직 안 했어요</small>':`<b>${pct}%</b><small>${a.r}/${a.t} · ${a.n}판</small>`}</span></div>`}).join('');
   const maxS=Math.max(5,...days.map(x=>DOC.study[x.s]||0));
   const bars=days.map(x=>{const n=DOC.study[x.s]||0,rounds=Object.values(learn[x.s]||{}).reduce((a,v)=>a+v.n,0);
-    return `<div class="bar"><span class="bv">${n||''}</span><span class="bb"><i style="height:${Math.round(n/maxS*100)}%"></i></span><span class="bd">${WD[x.d.getDay()]}</span><small>${rounds?rounds+'판':'-'}</small></div>`}).join('');
+    return `<div class="dbar"><span class="bv">${n||''}</span><span class="bb"><i style="height:${Math.round(n/maxS*100)}%"></i></span><span class="bd">${WD[x.d.getDay()]}</span><small>${rounds?rounds+'판':'-'}</small></div>`}).join('');
   const miss=P.reviewList(DOC).filter(x=>x.t>0).sort((a,b)=>b.t-a.t||b.n-a.n).slice(0,8);
   const waiting=P.reviewList(DOC).filter(x=>x.n>0).length;
   return `<div class="card report"><h3>📊 ${esc(childName())} 공부 리포트</h3>
     <div class="rep-top"><div><b>🔥 ${sk}일</b><small>연속 공부</small></div><div class="${done.length>=goal?'met':''}"><b>${Math.min(done.length,4)}/${goal}</b><small>오늘 목표 과목</small></div><div><b>★ ${total}</b><small>이번 주 별</small></div></div>
-    <h4>과목별 정답률 <small>최근 7일</small></h4>${subj}
     <h4>최근 7일 <small>별 · 푼 판 수</small></h4><div class="bars">${bars}</div>
     <h4>자주 틀리는 문제 <small>${waiting?`다시 풀기 ${waiting}개 대기 중`:'다시 풀 문제 없음'}</small></h4>
     ${miss.length?`<ul class="misslist">${miss.map(x=>`<li><span class="mk">${esc(P.KIND[x.kind]||x.kind)}</span><b>${esc(x.key)}</b><small>${x.t}번 틀림${x.n>0?' · 다시 풀기 대기':' · 다시 맞힘 ✓'}</small></li>`).join('')}</ul>`:'<p class="empty" style="padding:4px">아직 틀린 문제가 없어요.</p>'}

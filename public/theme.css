@@ -419,18 +419,13 @@ button.tile:active{transform:translateY(1px);box-shadow:var(--shadow-sm)}
 .rep-top div.met{border-color:var(--grape,#7B3FB8);background:var(--grape-soft,#EEE3FA)}
 .rep-top b{display:block;font-family:var(--f-display);font-weight:400;font-size:24px}
 .rep-top small{color:var(--muted);font-size:13px}
-.acc{display:grid;grid-template-columns:92px 1fr 92px;gap:8px;align-items:center;margin:6px 0;font-size:15px}
-.acc .ab{height:12px;border-radius:6px;background:var(--line);overflow:hidden}
-.acc .ab i{display:block;height:100%;border-radius:6px;background:var(--muted)}
-.acc .ab i.good{background:#3E9B4F}.acc .ab i.mid{background:#E9A821}.acc .ab i.low{background:#E0532C}
-.acc .av{text-align:right;line-height:1.1}.acc .av small{display:block;color:var(--muted);font-size:12px}
 .bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;align-items:end}
-.bar{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px}
-.bar .bb{width:70%;height:70px;background:var(--line);border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
-.bar .bb i{display:block;width:100%;background:var(--star,#E9A821);border-radius:8px 8px 0 0;min-height:2px}
-.bar .bv{min-height:1.2em;font-weight:700}.bar small{color:var(--muted);font-size:11px}
+.dbar{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px}
+.dbar .bb{width:70%;height:70px;background:var(--sunk);border:1px solid var(--hair);margin:0;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
+.dbar .bb i{display:block;width:100%;background:var(--star,#E9A821);border-radius:8px 8px 0 0;min-height:2px}
+.dbar .bv{min-height:1.2em;font-weight:700}.dbar small{color:var(--muted);font-size:11px}
 .misslist{list-style:none;margin:0;padding:0}
 .misslist li{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;padding:6px 0;border-bottom:1px dashed var(--line)}
-.misslist .mk{font-size:12px;background:var(--line);border-radius:999px;padding:1px 8px}
+.misslist .mk{font-size:12px;background:var(--sunk);color:var(--ink);border:1px solid var(--hair);border-radius:999px;padding:1px 8px}
 .misslist b{font-family:var(--f-letter);font-size:18px}
 .misslist small{color:var(--muted);margin-left:auto}
