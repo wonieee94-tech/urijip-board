@@ -1,0 +1,8 @@
+# 설치 파일
+node_modules/
+tools/map/node_modules/
+# 로컬 실행·배포 기록
+.wrangler/
+.netlify/
+# 내 PC 테스트용 가족 데이터 (가족 코드가 들어 있음)
+.dev-data.json

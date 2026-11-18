@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>우리집 보드</title>
+<meta name="theme-color" content="#F7F5EE">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="우리집">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="preload" href="/fonts/HadaCondensed-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/skins.css">
+</head>
+<body>
+<div class="wrap"><header class="top" id="top" hidden>
+  <div class="fam"><small id="famName"></small><h1 id="pageTitle">오늘</h1></div>
+  <button class="pill kid" id="kidBtn"></button>
+</header></div>
+<main class="wrap" id="app"></main>
+<nav class="tabs" id="tabs" hidden><div class="in">
+  <button data-tab="today"><svg viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.5V20h13V9.5"/><path d="M10 20v-5.5h4V20"/></svg>오늘</button>
+  <button data-tab="plan"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><circle cx="12" cy="15" r="1.4"/></svg>일정</button>
+  <button data-tab="routine"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="m8 12.5 3 3 5.5-6.5"/></svg>루틴</button>
+  <button data-tab="notes"><svg viewBox="0 0 24 24"><path d="M4 5.5h16v10H10l-4.5 4v-4H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg>한마디</button>
+  <button data-tab="study"><svg viewBox="0 0 24 24"><path d="m15.5 4.5 4 4L9 19H5v-4z"/><path d="m13.5 6.5 4 4"/></svg>공부</button>
+  <button data-tab="play"><svg viewBox="0 0 24 24"><path d="M21 15.5v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V8.5l-8 5v2l8-2.5V18l-2 1.5V21l3.5-1 3.5 1v-1.5L13 18v-5z"/></svg>놀이</button>
+  <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg>설정</button>
+</div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script src="/grapes.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const app=$('#app');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2=n=>String(n).padStart(2,'0');
+const ymd=d=>`${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const WD='일월화수목금토';
+const fmtDate=s=>{const d=parse(s);return `${d.getMonth()+1}월 ${d.getDate()}일 (${WD[d.getDay()]})`};
+const fmtTime=t=>{if(!t)return'';const[h,m]=t.split(':').map(Number);return `${h<12?'오전':'오후'} ${h%12||12}시${m?` ${m}분`:''}`};
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
+
+const SKINS=[['airport','공항'],['stationery','공책'],['yellow','노랑'],['dots','물방울'],['stars','별'],['stripes','줄무늬'],['pastel','파스텔'],['sweet','리본·체리']];
+const PATTERNED=['airport','dots','stars','stripes','sweet'];
+function applySkin(k){k=SKINS.some(x=>x[0]===k)?k:'airport';const h=document.documentElement;if(h.dataset.skin!==k){h.dataset.skin=k;h.classList.toggle('patterned',PATTERNED.includes(k));ls.set('hb-skin',k)}}
+applySkin(ls.get('hb-skin'));
+let CODE=ls.get('hb-code'), DOC=null, TAB=ls.get('hb-tab')||'today', KID=ls.get('hb-kid')==='1', ME=ls.get('hb-me');
+let calMonth=null, selDay=ymd(new Date()), editStatus=null, lastErr='';
+
+function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200)}
+
+/* ---------- 서버 ---------- */
+async function call(op,p){
+  const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:CODE,op,p})});
+  const data=await r.json().catch(()=>({error:'서버 응답을 읽지 못했어요'}));
+  if(!r.ok)throw new Error(data.error||'저장하지 못했어요');
+  return data;
+}
+async function act(op,p,msg){
+  try{DOC=await call(op,p);render();if(msg)toast(msg)}
+  catch(e){toast(e.message)}
+}
+async function load(quiet){
+  if(!CODE)return;
+  try{
+    const r=await fetch('/api/family?code='+encodeURIComponent(CODE),{cache:'no-store'});
+    const data=await r.json();
+    if(r.status===404){ls.set('hb-code',null);CODE=null;DOC=null;render();toast('가족을 찾을 수 없어서 처음 화면으로 돌아왔어요');return}
+    if(!r.ok)throw new Error(data.error);
+    const changed=!DOC||DOC.rev!==data.rev;DOC=data;lastErr='';
+    if(changed&&!(quiet&&isTyping()))render();
+  }catch(e){lastErr='연결이 끊겼어요. 잠시 뒤 다시 시도할게요.';if(!quiet)render()}
+}
+const isTyping=()=>{const a=document.activeElement;return a&&(a.tagName==='INPUT'||a.tagName==='SELECT')};
+setInterval(()=>{if(document.visibilityState==='visible')load(true)},20000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load(true)});
+
+/* ---------- 도움 함수 ---------- */
+const member=id=>DOC.members.find(m=>m.id===id);
+const child=()=>DOC.members.find(m=>m.role==='child');
+const childName=()=>child()?.name||'아이';
+function eventsOn(day){
+  const d=parse(day);
+  return DOC.events.filter(e=>{
+    if(e.date>day)return false;
+    if(e.repeat==='weekly')return parse(e.date).getDay()===d.getDay();
+    if(e.repeat==='yearly')return e.date.slice(5)===day.slice(5);
+    return day===e.date||(e.endDate&&day<=e.endDate);
+  }).sort((a,b)=>(a.time||'99').localeCompare(b.time||'99'));
+}
+function whoText(e){if(!e.who||!e.who.length||e.who.includes('all'))return'가족 모두';return e.who.map(id=>member(id)?.name).filter(Boolean).join(', ')}
+const STATE={home:['🏠','집에 있어요'],out:['🚶','밖에 있어요'],coming:['🚗','집에 오는 중'],school:['🏫','유치원·학교'],work:['💼','회사']};
+function statusOf(m){const s=DOC.status[m.id];if(!s||ymd(new Date(s.at))!==ymd(new Date()))return null;return s}
+function statusText(s){if(!s)return'아직 안 알려줬어요';const[e,t]=STATE[s.state]||STATE.home;
+  return `${e} ${t}${s.eta?` · ${fmtTime(s.eta)}${s.state==='coming'?' 도착':'에 와요'}`:''}${s.note?` · ${esc(s.note)}`:''}`}
+function routinesFor(day){const wd=parse(day).getDay();return DOC.routines.filter(r=>r.days.includes(wd))}
+function upcoming(days=45){
+  const out=[];const t=new Date();
+  for(let i=1;i<=days;i++){const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()+i);const s=ymd(d);
+    for(const e of eventsOn(s))if(e.repeat!=='weekly'&&(e.date===s||e.repeat==='yearly'))out.push({e,day:s,dd:i})}
+  return out.slice(0,8);
+}
+const ddayText=n=>n===1?'내일':`${n}일 뒤`;
+
+/* ---------- 그리기 ---------- */
+function render(){
+  document.body.classList.toggle('kid',!!(DOC&&KID));
+  $('#top').hidden=!DOC||KID||TAB==='today';$('#tabs').hidden=!DOC||KID;
+  if(!CODE||!DOC){if(CODE&&!DOC){app.innerHTML='<p class="empty" style="padding-top:80px">우리집 보드를 불러오는 중이에요…</p>';return}return renderStart()}
+  document.title=DOC.name+' 보드';applySkin(DOC.skin);
+  $('#famName').textContent=DOC.name;
+  $('#kidBtn').textContent=childName()+' 보드';
+  if(KID)return renderKid();
+  $$('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===TAB));
+  if(!['today','plan','routine','notes','study','play','settings'].includes(TAB))TAB='today';
+  $('#pageTitle').textContent={today:'오늘',plan:'일정',routine:'루틴',notes:'한마디',study:'공부',play:'놀이터',settings:'설정'}[TAB];
+  ({today:renderToday,plan:renderPlan,routine:renderRoutine,notes:renderNotes,study:renderStudy,play:renderPlay,settings:renderSettings})[TAB]();
+  if(lastErr)app.insertAdjacentHTML('afterbegin',`<p class="card" style="color:var(--warm)">${lastErr}</p>`);
+}
+$('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(!b)return;TAB=b.dataset.tab;ls.set('hb-tab',TAB);editStatus=null;render();window.scrollTo(0,0)};
+$('#kidBtn').onclick=()=>{KID=true;ls.set('hb-kid','1');render();window.scrollTo(0,0)};
+
+/* 처음 화면 */
+function renderStart(){
+  app.innerHTML=`<section class="hero"><h1>우리집 보드</h1><p>가족 일정과 픽업, 아이 루틴, 한마디, 공부방을 한곳에서 함께 봐요.</p></section>
+  <div class="card"><h3>새로 시작하기</h3>
+    <label class="l" for="sName">가족 이름</label><input class="input" id="sName" value="세윤이네" maxlength="20">
+    <label class="l">가족 구성원 (나중에 설정에서 바꿀 수 있어요)</label>
+    <div class="chips" id="sMembers"></div>
+    <div class="row" style="margin-top:10px"><input class="input grow" id="sNew" placeholder="예: 할머니" maxlength="12"><button class="btn" id="sAdd">추가</button></div>
+    <p style="margin-top:14px"><button class="btn primary block" id="sCreate">우리집 보드 만들기</button></p></div>
+  <div class="card"><h3>가족이 이미 만들었어요</h3>
+    <p class="sub" style="color:var(--muted);margin:0 0 8px">가족에게 받은 코드를 넣어 주세요.</p>
+    <div class="row"><input class="input grow" id="jCode" placeholder="ABCD-1234" maxlength="9" autocapitalize="characters" autocomplete="off"><button class="btn primary" id="jGo">들어가기</button></div></div>`;
+  const mem=[{name:'엄마',emoji:'👩',role:'adult'},{name:'아빠',emoji:'👨',role:'adult'},{name:'세윤',emoji:'🧒',role:'child'}];
+  const draw=()=>{$('#sMembers').innerHTML=mem.map((m,i)=>`<button class="chip on" data-i="${i}">${m.emoji} ${esc(m.name)} ✕</button>`).join('')};
+  draw();
+  $('#sMembers').onclick=e=>{const c=e.target.closest('[data-i]');if(c){mem.splice(+c.dataset.i,1);draw()}};
+  $('#sAdd').onclick=()=>{const v=$('#sNew').value.trim();if(!v)return;const emo=/할머니/.test(v)?'👵':/할아버지/.test(v)?'👴':/이모|고모|언니|누나/.test(v)?'👩':/삼촌|형|오빠/.test(v)?'👨':'🙂';mem.push({name:v,emoji:emo,role:'adult'});$('#sNew').value='';draw()};
+  $('#sCreate').onclick=async()=>{
+    try{const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({op:'create',p:{name:$('#sName').value,members:mem}})});
+      const data=await r.json();if(!r.ok)throw new Error(data.error);
+      CODE=data.code;DOC=data.doc;ls.set('hb-code',CODE);TAB='today';render();toast('우리집 보드를 만들었어요');
+    }catch(e){toast(e.message||'만들지 못했어요')}};
+  $('#jGo').onclick=()=>join($('#jCode').value);
+}
+async function join(raw){
+  const c=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(c.length!==8){toast('코드는 8자리예요');return}
+  CODE=c.slice(0,4)+'-'+c.slice(4);ls.set('hb-code',CODE);DOC=null;render();await load();
+  if(DOC)toast(DOC.name+' 보드에 들어왔어요');
+}
+
+/* 오늘 */
+/* ---------- 우리집 마당 (오늘 첫 화면) ---------- */
+const SCENE_SVG=`<svg class="scene-art" viewBox="0 0 360 230" aria-hidden="true"><g class="s">
+<path class="f-road" d="M0 207 C120 213 240 204 360 209 L360 230 L0 230 Z"/>
+<path class="dash" d="M6 220 C120 225 240 216 354 221"/>
+<path d="M2 203 C60 199 120 206 180 201 S300 197 358 201"/>
+<path class="f-cloud" d="M24 46 C10 46 9 28 25 27 C27 12 50 10 58 20 C66 8 94 10 98 24 C112 14 138 18 140 30 C158 26 174 36 168 48 C172 56 160 60 152 58 L32 58 C20 60 15 50 24 46 Z"/>
+<circle class="f-sun" cx="214" cy="32" r="13"/><path d="M214 11v-5M214 58v-4M193 32h-5M240 32h-5M199 17l-3-3M230 48l3 3M229 17l3-3M198 48l-3 3"/>
+<path class="f-wall" d="M26 111 L168 109 L170 202 L24 203 Z"/>
+<path class="f-roof" d="M136 82 L137 59 L152 58 L153 92 Z"/>
+<path class="f-roof" d="M13 116 L96 52 L181 113 Z"/>
+<path class="f-door" d="M84 203 L84 164 Q97 152 110 164 L110 203"/><circle cx="104" cy="184" r="1.6" class="f-ink"/>
+<path class="f-win" d="M38 124 L68 123 L69 146 L38 147 Z M38 135 L69 135 M53 123 L53 147"/>
+<path class="f-win" d="M126 123 L156 122 L157 146 L126 146 Z M126 134 L157 134 M141 122 L141 146"/>
+<path d="M196 202 C195 190 197 178 196 166"/>
+<path class="f-tree" d="M196 168 C176 170 174 146 187 142 C183 125 207 120 211 136 C226 134 226 162 211 165 C207 171 201 170 196 168 Z"/>
+<path class="f-school" d="M222 202 L222 146 L266 145 L267 202 Z"/>
+<path class="f-roof2" d="M216 148 L244 124 L272 147 Z"/>
+<path d="M244 124 L244 100"/><path class="f-flag" d="M244 101 L262 106 L244 112 Z"/>
+<path class="f-win" d="M236 186 L252 186 L252 202 L236 202 Z"/>
+<path class="f-office" d="M290 202 L289 94 L342 93 L344 202 Z"/>
+<path class="f-win" d="M298 106h10v10h-10zM322 106h10v10h-10zM298 126h10v10h-10zM322 126h10v10h-10zM298 146h10v10h-10zM322 146h10v10h-10z"/>
+</g>
+<g class="lbl"><text x="244" y="172">유치원</text><text x="316" y="176">회사</text><text x="200" y="190">밖</text></g></svg>`;
+// 장소마다 자석 자리 (그림 좌표 360×230)
+const ZONES={unknown:[[42,36],[74,36],[106,36],[138,36],[58,62],[122,62]],home:[[52,182],[142,182],[97,140],[52,140],[142,140],[97,182]],
+  coming:[[300,214],[256,214],[212,214],[168,214]],school:[[230,168],[258,188]],work:[[302,168],[332,190]],out:[[186,182],[206,176],[176,160]]};
+const ZONE_NAME={unknown:'어디 있는지 몰라요',home:'집에 있어요',coming:'집에 오는 중',school:'유치원·학교',work:'회사',out:'밖에 있어요'};
+function sceneHtml(interactive){
+  const groups={};DOC.members.forEach((m,i)=>{const s=statusOf(m);(groups[s?s.state:'unknown']||=[]).push({m,i,s})});
+  let pins='';
+  for(const[z,list]of Object.entries(groups))list.forEach((o,k)=>{
+    const spots=ZONES[z]||ZONES.unknown,[x,y]=spots[k%spots.length],off=Math.floor(k/spots.length)*10;
+    const tag=z==='unknown'?'?':o.s?.eta||'';
+    pins+=`<${interactive?'button':'span'} class="pin z-${z}${editStatus===o.m.id?' on':''}" ${interactive?`data-m="${o.m.id}"`:''} style="left:${((x+off)/3.6).toFixed(1)}%;top:${((y-off)/2.3).toFixed(1)}%;--c:var(--m${o.i%6})" aria-label="${esc(o.m.name)}, ${ZONE_NAME[z]}${o.s?.eta?' '+o.s.eta:''}">
+      <span class="av">${esc(o.m.emoji)}</span><span class="nm">${esc(o.m.name)}</span>${tag?`<span class="eta">${tag}</span>`:''}</${interactive?'button':'span'}>`});
+  return `<div class="scene">${SCENE_SVG}${pins}</div>`;
+}
+/* ---------- 첫 화면: 우리집 공항 출도착 안내판 ---------- */
+const ARR={coming:['오는 중','st-go',0],work:['회사','st-away',1],school:['유치원','st-away',1],out:['외출','st-away',1],home:['도착','st-in',2],unknown:['확인 중','st-wait',3]};
+const PLANE_IN='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19h19M6 13.5l-2.5-5 1.8-.5 3.2 3 4-1.1-3-6.4 2.2-.6 5.2 5.4 3.6-1c1-.3 2 .3 2.2 1.3.3 1-.3 2-1.3 2.2L6 13.5z"/></svg>';
+const PLANE_OUT='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 19h19M3.8 14.6l-1.3-4.3 1.6-.2 2.5 2.6 4.2-1.3L8 5.2l2-.4 5.6 5.4 4-1.2c1-.3 2.1.3 2.3 1.3.3 1-.3 2-1.3 2.3L3.8 14.6z"/></svg>';
+function depStatus(e,now){
+  if(!e.time)return['종일','st-away'];
+  const[h,m]=e.time.split(':').map(Number),s=h*60+m;let end=s+60;
+  if(e.endTime){const[a,b]=e.endTime.split(':').map(Number);end=a*60+b}
+  if(now<s-30)return['예정','st-wait'];if(now<s)return['곧 출발','st-go'];if(now<end)return['진행 중','st-in'];return['끝','st-done'];
+}
+function ring(done,total){const r=30,c=2*Math.PI*r,p=total?done/total:0;
+  return `<svg class="ring" viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="${r}" class="r0"/><circle cx="38" cy="38" r="${r}" class="r1" stroke-dasharray="${(c*p).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 38 38)"/></svg>`}
+function renderToday(){
+  const day=ymd(new Date()),evs=eventsOn(day),d=new Date(),now=d.getHours()*60+d.getMinutes();
+  const rs=routinesFor(day),done=rs.filter(r=>DOC.checks[day]?.[r.id]).length,S=stickers();
+  const soon=upcoming(),first=soon[0],note=DOC.notes[0];
+  const arr=DOC.members.map((m,i)=>{const s=statusOf(m),k=s?s.state:'unknown';return{m,i,s,k,o:ARR[k][2]}}).sort((a,b)=>a.o-b.o||(a.s?.eta||'99').localeCompare(b.s?.eta||'99'));
+  app.innerHTML=`
+  <header class="fids-top">
+    <span class="ft-eye">FAMILY BOARD · 우리 가족 알림판</span>
+    <button class="ft-kid" id="kidBtn2">${esc(childName())} 보드</button>
+    <h1 class="ft-name">${esc(DOC.name)}</h1>
+    <div class="ft-r"><span class="t" id="clk"></span><span class="ft-date">${fmtDate(day)}</span></div>
+  </header>
+  <section class="fids">
+    <h2 class="fids-h">${PLANE_IN}<span>도착</span><small>ARRIVALS · 누가 언제 와요?</small></h2>
+    <div class="fids-row fids-cols"><span>시간</span><span>가족</span><span>상태</span></div>
+    ${arr.map(({m,i,s,k})=>`<button class="fids-row${editStatus===m.id?' on':''}" data-m="${m.id}">
+      <span class="fr-time">${s?.eta||'--:--'}</span>
+      <span class="fr-main"><span class="fr-av" style="--c:var(--m${i%6})">${esc(m.emoji)}</span><b>${esc(m.name)}</b>${s?.note?`<small>${esc(s.note)}</small>`:''}</span>
+      <span class="fr-st ${ARR[k][1]}">${ARR[k][0]}</span></button>`).join('')}
+    <div id="stedit"></div>
+  </section>
+  <section class="fids">
+    <h2 class="fids-h">${PLANE_OUT}<span>출발</span><small>DEPARTURES · 오늘 일정</small></h2>
+    <div class="fids-row fids-cols"><span>시간</span><span>일정</span><span>상태</span></div>
+    ${evs.map(e=>{const[t,c]=depStatus(e,now);const pk=e.pickup==='tbd'?'픽업 정해야 해요':e.pickup?`픽업 ${member(e.pickup)?.name||''}`:'';
+      return `<div class="fids-row"><span class="fr-time">${e.time||'종일'}</span>
+        <span class="fr-main"><b>${esc(e.emoji)} ${esc(e.title)}</b><small>${esc(whoText(e))}${pk?` · 🚗 ${esc(pk)}`:''}${e.bring?` · 🎒 ${esc(e.bring)}`:''}</small></span>
+        <span class="fr-st ${c}">${t}</span></div>`}).join('')||'<div class="fids-row fids-empty"><span></span><span class="fr-main">오늘은 출발하는 일정이 없어요</span><span></span></div>'}
+    <button class="fids-add" data-go-tab="plan">＋ 일정 넣기</button>
+  </section>
+  <div class="yard">
+    <button class="tile t-kid" data-go-tab="routine"><h2 class="tl">${esc(childName())} 오늘</h2><div class="tb">
+      <div class="kidrow">${ring(done,rs.length)}<div><b class="big">${done}<small>/${rs.length}</small></b><span>할 일</span></div></div>
+      <div class="kidmini"><span>🍇 ${S.board.length}/${Grapes.GOAL}</span><span style="color:var(--star)">★ ${DOC.study[day]||0}</span></div></div></button>
+    <button class="tile t-soon" data-go-tab="plan"><h2 class="tl">다가오는 날</h2><div class="tb">
+      ${first?`<span class="dd">${first.dd===1?'내일':'D-'+first.dd}</span><b>${esc(first.e.emoji)} ${esc(first.e.title)}</b><span class="sm">${fmtDate(first.day)}</span>
+        ${soon.slice(1,3).map(x=>`<span class="sm">· ${esc(x.e.title)} ${x.dd===1?'내일':'D-'+x.dd}</span>`).join('')}`:'<span class="sm">45일 안에 다가오는 날이 없어요</span>'}</div></button>
+    <button class="tile t-note" data-go-tab="notes"><h2 class="tl">한마디</h2><div class="tb">${note?`<span class="who">${esc(note.from||'가족')}</span><p>${esc(note.text)}</p>`:'<p>한마디 남기기</p>'}</div></button>
+  </div>`;
+  tick();
+  $('#kidBtn2').onclick=()=>$('#kidBtn').click();
+  $$('.fids-row[data-m]').forEach(b=>b.onclick=()=>{editStatus=editStatus===b.dataset.m?null:b.dataset.m;renderToday()});
+  $$('[data-go-tab]').forEach(b=>b.onclick=()=>{TAB=b.dataset.goTab;ls.set('hb-tab',TAB);render();window.scrollTo(0,0)});
+  if(editStatus)drawStatusEditor();
+}
+function drawStatusEditor(){
+  const m=member(editStatus);if(!m)return;const cur=statusOf(m)||{state:'home',eta:''};let st=cur.state;
+  $('#stedit').innerHTML=`<div class="stedit"><b>${esc(m.name)}</b>, 지금 어디예요?
+    <div class="chips" id="stChips" style="margin-top:8px">${Object.entries(STATE).map(([k,[e,t]])=>`<button class="chip${k===st?' on':''}" data-s="${k}">${e} ${t}</button>`).join('')}</div>
+    <label class="l" for="stEta">몇 시에 집에 와요? (선택)</label>
+    <div class="row"><input class="input grow" type="time" id="stEta" value="${cur.eta||''}"><button class="btn primary" id="stSave">알리기</button></div></div>`;
+  $('#stChips').onclick=e=>{const c=e.target.closest('[data-s]');if(!c)return;st=c.dataset.s;$$('#stChips .chip').forEach(x=>x.classList.toggle('on',x===c))};
+  $('#stSave').onclick=()=>{const id=editStatus;editStatus=null;act('setStatus',{id,state:st,eta:$('#stEta').value},'알렸어요')};
+}
+function evItem(e){
+  const pk=e.pickup==='tbd'?'데리러 갈 사람 정해야 해요':e.pickup?`${member(e.pickup)?.name||'?'} 픽업`:'';
+  return `<div class="item"><span class="tm${e.time?'':' all'}">${e.time?e.time:'하루 종일'}</span>
+    <div class="grow"><b>${esc(e.emoji)} ${esc(e.title)}</b><div class="sub">${esc(whoText(e))}${e.endTime?` · ${e.endTime}까지`:''}${e.repeat==='weekly'?' · 매주':e.repeat==='yearly'?' · 매년':''}</div>
+    ${pk?`<span class="tag pick">🚗 ${esc(pk)}</span>`:''}${e.bring?`<span class="tag bring">🎒 ${esc(e.bring)}</span>`:''}</div>
+    ${TAB==='plan'?`<button class="x" data-del="${e.id}" aria-label="일정 지우기">✕</button>`:''}</div>`;
+}
+let clockTimer=null;
+function tick(){clearInterval(clockTimer);const f=()=>{const el=$('#clk')||$('#kclk');if(!el){clearInterval(clockTimer);return}const d=new Date();el.innerHTML=`<small class="ap">${d.getHours()<12?'오전':'오후'}</small>`+[...`${d.getHours()%12||12}:${pad2(d.getMinutes())}`].map(c=>c===':'?':':`<span class="fl">${c}</span>`).join('')};f();clockTimer=setInterval(f,10000)}
+
+/* 일정 */
+const EMOJIS=['📌','🎂','🏫','🎹','⚽','🏥','✈️','🎭','🎵','🍽️','🛒','🎉'];
+function renderPlan(){
+  const now=new Date();if(!calMonth)calMonth=new Date(now.getFullYear(),now.getMonth(),1);
+  const y=calMonth.getFullYear(),mo=calMonth.getMonth(),start=new Date(y,mo,1-new Date(y,mo,1).getDay());
+  let cells='';for(let i=0;i<42;i++){const d=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i),s=ymd(d),n=eventsOn(s).length;
+    cells+=`<button data-d="${s}" class="${d.getMonth()!==mo?'out ':''}${s===ymd(now)?'today ':''}${s===selDay?'sel':''}"><span class="${d.getDay()===0&&s!==selDay?'sun':''}">${d.getDate()}</span><span class="dots">${'<i></i>'.repeat(Math.min(n,3))}</span></button>`}
+  const evs=eventsOn(selDay);
+  app.innerHTML=`
+  <div class="card"><div class="calhead"><button class="btn sm" id="pm" aria-label="이전 달">◀</button><h3>${y}년 ${mo+1}월</h3><button class="btn sm" id="nm" aria-label="다음 달">▶</button></div>
+    <div class="cal">${[...WD].map(w=>`<span class="wd">${w}</span>`).join('')}${cells}</div></div>
+  <h2 class="sec">${fmtDate(selDay)}</h2>
+  <div class="card notebook">${evs.length?evs.map(evItem).join(''):'<p class="empty">이날은 아직 일정이 없어요.</p>'}</div>
+  <div class="card"><h3>새 일정 넣기</h3>
+    <div class="chips" id="eEmo">${EMOJIS.map((e,i)=>`<button class="chip${i===0?' on':''}" data-e="${e}">${e}</button>`).join('')}</div>
+    <label class="l" for="eTitle">무슨 일정이에요?</label><input class="input" id="eTitle" placeholder="예: 피아노 학원" maxlength="40">
+    <div class="two"><div><label class="l" for="eDate">날짜</label><input class="input" type="date" id="eDate" value="${selDay}"></div>
+      <div><label class="l" for="eEnd">끝나는 날 (선택)</label><input class="input" type="date" id="eEnd"></div></div>
+    <div class="two"><div><label class="l" for="eTime">시작 시간 (선택)</label><input class="input" type="time" id="eTime"></div>
+      <div><label class="l" for="eEndT">끝 시간 (선택)</label><input class="input" type="time" id="eEndT"></div></div>
+    <label class="l">반복</label><div class="chips" id="eRep"><button class="chip on" data-r="none">한 번</button><button class="chip" data-r="weekly">매주</button><button class="chip" data-r="yearly">매년 (생일·기념일)</button></div>
+    <label class="l">누구 일정이에요? (여러 명 골라도 돼요)</label>
+    <div class="chips" id="eWho"><button class="chip on" data-w="all">👨‍👩‍👧 가족 모두</button>${DOC.members.map(m=>`<button class="chip" data-w="${m.id}">${esc(m.emoji)} ${esc(m.name)}</button>`).join('')}</div>
+    <label class="l">🚗 데리러 갈 사람</label>
+    <div class="chips" id="ePick"><button class="chip on" data-p="">없음</button><button class="chip" data-p="tbd">정해야 해요</button>${DOC.members.filter(m=>m.role!=='child').map(m=>`<button class="chip" data-p="${m.id}">${esc(m.emoji)} ${esc(m.name)}</button>`).join('')}</div>
+    <label class="l" for="eBring">🎒 챙길 것 (선택)</label><input class="input" id="eBring" placeholder="예: 체육복, 준비물" maxlength="60">
+    <p style="margin-top:14px"><button class="btn primary block" id="eAdd">일정 넣기</button></p></div>`;
+  $('#pm').onclick=()=>{calMonth=new Date(y,mo-1,1);renderPlan()};
+  $('#nm').onclick=()=>{calMonth=new Date(y,mo+1,1);renderPlan()};
+  $$('.cal button').forEach(b=>b.onclick=()=>{selDay=b.dataset.d;const d=parse(selDay);if(d.getMonth()!==mo)calMonth=new Date(d.getFullYear(),d.getMonth(),1);renderPlan()});
+  $$('[data-del]').forEach(b=>b.onclick=()=>{const e=DOC.events.find(x=>x.id===b.dataset.del);
+    if(confirm(`‘${e?.title}’ 일정을 지울까요?${e?.repeat!=='none'?' 반복되는 날짜도 모두 지워져요.':''}`))act('delEvent',{id:b.dataset.del},'지웠어요')});
+  const single=(id,attr)=>$(id).onclick=e=>{const c=e.target.closest(`[${attr}]`);if(!c)return;$$(id+' .chip').forEach(x=>x.classList.toggle('on',x===c))};
+  single('#eEmo','data-e');single('#eRep','data-r');single('#ePick','data-p');
+  $('#eWho').onclick=e=>{const c=e.target.closest('[data-w]');if(!c)return;
+    if(c.dataset.w==='all'){$$('#eWho .chip').forEach(x=>x.classList.toggle('on',x===c))}
+    else{c.classList.toggle('on');$('#eWho [data-w="all"]').classList.remove('on');if(!$$('#eWho .chip.on').length)$('#eWho [data-w="all"]').classList.add('on')}};
+  $('#eAdd').onclick=()=>{
+    const who=$$('#eWho .chip.on').map(x=>x.dataset.w);
+    act('addEvent',{emoji:$('#eEmo .on').dataset.e,title:$('#eTitle').value,date:$('#eDate').value,endDate:$('#eEnd').value,time:$('#eTime').value,endTime:$('#eEndT').value,
+      repeat:$('#eRep .on').dataset.r,who,pickup:$('#ePick .on').dataset.p,bring:$('#eBring').value},'일정을 넣었어요');
+    selDay=$('#eDate').value||selDay;
+  };
+}
+
+/* 루틴 */
+const R_EMO=['🪥','🎒','📚','✏️','🧸','🛁','👕','💧','🌙','🥦','🙏','⭐'];
+function renderRoutine(){
+  const day=ymd(new Date()),rs=routinesFor(day);
+  app.innerHTML=`
+  <div class="card"><h3>오늘 할 일</h3>
+    ${rs.length?`<div class="rlist">${rs.map(r=>`<button class="rbtn${DOC.checks[day]?.[r.id]?' done':''}" data-r="${r.id}"><span class="e">${esc(r.emoji)}</span>${esc(r.title)}</button>`).join('')}</div>`:'<p class="empty">오늘은 정해진 루틴이 없어요.</p>'}
+    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">${esc(childName())} 보드에서도 직접 체크할 수 있어요.</p></div>
+  <div class="card"><h3>루틴 목록</h3>
+    ${DOC.routines.map(r=>`<div class="item"><span style="font-size:26px">${esc(r.emoji)}</span><div class="grow"><b>${esc(r.title)}</b><div class="sub">${r.days.length===7?'매일':r.days.map(d=>WD[d]).join(' ')}</div></div><button class="x" data-del="${r.id}" aria-label="루틴 지우기">✕</button></div>`).join('')||'<p class="empty">루틴이 없어요.</p>'}</div>
+  <div class="card"><h3>루틴 더하기</h3>
+    <div class="chips" id="rEmo">${R_EMO.map((e,i)=>`<button class="chip${i===0?' on':''}" data-e="${e}">${e}</button>`).join('')}</div>
+    <label class="l" for="rTitle">이름</label><input class="input" id="rTitle" placeholder="예: 물 마시기" maxlength="24">
+    <label class="l">무슨 요일?</label>
+    <div class="chips" id="rDays"><button class="chip on" data-all="1">매일</button><button class="chip" data-week="1">평일</button>${[...WD].map((w,i)=>`<button class="chip on" data-d="${i}">${w}</button>`).join('')}</div>
+    <p style="margin-top:14px"><button class="btn primary block" id="rAdd">루틴 더하기</button></p></div>`;
+  $$('.rbtn').forEach(b=>b.onclick=()=>act('toggleCheck',{date:day,rid:b.dataset.r}));
+  $$('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('이 루틴을 지울까요?'))act('delRoutine',{id:b.dataset.del},'지웠어요')});
+  $('#rEmo').onclick=e=>{const c=e.target.closest('[data-e]');if(c)$$('#rEmo .chip').forEach(x=>x.classList.toggle('on',x===c))};
+  $('#rDays').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;const ds=$$('#rDays [data-d]');
+    if(c.dataset.all)ds.forEach(x=>x.classList.add('on'));else if(c.dataset.week)ds.forEach(x=>x.classList.toggle('on',x.dataset.d>0&&x.dataset.d<6));else c.classList.toggle('on');
+    const on=ds.filter(x=>x.classList.contains('on')).map(x=>+x.dataset.d);
+    $('#rDays [data-all]').classList.toggle('on',on.length===7);$('#rDays [data-week]').classList.toggle('on',on.join()==='1,2,3,4,5')};
+  $('#rAdd').onclick=()=>act('addRoutine',{emoji:$('#rEmo .on').dataset.e,title:$('#rTitle').value,days:$$('#rDays [data-d].on').map(x=>+x.dataset.d),who:child()?.id||''},'루틴을 더했어요');
+}
+
+/* 한마디 */
+function noteItem(n){const m=DOC.members.find(x=>x.name===n.from);const t=new Date(n.at);
+  return `<div class="note${n.kid?' kid':''}"><span class="av">${esc(m?.emoji||'💬')}</span><div class="grow"><span class="who">${esc(n.from||'가족')} · ${ymd(t)===ymd(new Date())?'오늘':`${t.getMonth()+1}/${t.getDate()}`} ${pad2(t.getHours())}:${pad2(t.getMinutes())}</span><p>${esc(n.text)}</p></div>${TAB==='notes'&&!KID?`<button class="x" data-del="${n.id}" aria-label="지우기">✕</button>`:''}</div>`}
+function renderNotes(){
+  const adults=DOC.members.filter(m=>m.role!=='child');if(!ME||!member(ME))ME=adults[0]?.id;
+  app.innerHTML=`<div class="card"><h3>누가 남겨요?</h3>
+    <div class="chips" id="nWho">${adults.map(m=>`<button class="chip${m.id===ME?' on':''}" data-m="${m.id}">${esc(m.emoji)} ${esc(m.name)}</button>`).join('')}</div>
+    <div class="row" style="margin-top:12px"><input class="input grow" id="nText" placeholder="예: 간식은 냉장고에 있어" maxlength="120"><button class="btn primary" id="nAdd">남기기</button></div></div>
+  ${DOC.notes.length?`<div class="notes">${DOC.notes.map(noteItem).join('')}</div>`:'<p class="empty">아직 한마디가 없어요. '+esc(childName())+' 보드의 ‘말하기’ 버튼을 누르면 여기에 와요.</p>'}`;
+  $('#nWho').onclick=e=>{const c=e.target.closest('[data-m]');if(!c)return;ME=c.dataset.m;ls.set('hb-me',ME);$$('#nWho .chip').forEach(x=>x.classList.toggle('on',x===c))};
+  $('#nAdd').onclick=()=>act('addNote',{from:member(ME)?.name,text:$('#nText').value},'남겼어요');
+  $('#nText').onkeydown=e=>{if(e.key==='Enter'&&!e.isComposing)$('#nAdd').click()};
+  $$('[data-del]').forEach(b=>b.onclick=()=>act('delNote',{id:b.dataset.del}));
+}
+
+/* 공부 */
+/* 놀이터 */
+function renderPlay(){
+  let pp=[];try{pp=JSON.parse(ls.get('sy-passport'))||[]}catch(e){}
+  const G=[['map','#9ED3F5','🌍','세계 시계 지도','미국은 지금 몇 시? 프랑스는? 낮인 나라와 밤인 나라를 찾아봐요.'],
+    ['runway','#14171D','🛫','활주로 이착륙','출력을 올려 이륙하고, 착륙 안내등을 보며 사뿐히 내려요.'],
+    ['trip','#FFC72C','✈️','세윤항공 여행','인천에서 이륙해 도쿄·파리·뉴욕·시드니로 날아가요.'],
+    ['passport','#F5B0C0','🛂',`내 여권`,pp.length?`여행 도장 ${pp.length}개를 모았어요.`:'여행을 다녀오면 도장이 찍혀요.']];
+  app.innerHTML=G.map(([k,bg,e,t,s])=>`<a class="playcard" href="/games.html#${k}"><span class="art" style="background:${bg}">${e}</span><span class="tx"><b>${t}</b><small>${s}</small></span><span class="go">›</span></a>`).join('')
+    +`<p style="color:var(--muted);font-size:14px;margin:4px 2px 0">여권 도장은 놀이를 한 기기에 저장돼요.</p>`;
+}
+function renderStudy(){
+  const t=new Date();const days=[...Array(7)].map((_,i)=>{const d=new Date(t.getFullYear(),t.getMonth(),t.getDate()-6+i);return{d,s:ymd(d)}});
+  const total=days.reduce((a,x)=>a+(DOC.study[x.s]||0),0);
+  const S=stickers(),full=S.board.length>=Grapes.GOAL;
+  app.innerHTML=`<a class="bigstudy" href="/study.html">✏️ ${esc(childName())} 공부방 열기</a>
+  <div class="card"><h3>🍇 칭찬 스티커 ${S.board.length} / ${Grapes.GOAL}</h3>
+    ${todayStickers()}
+    ${Grapes.svg(S.board)}
+    <p class="giftline">${S.gift?`🎁 ${esc(S.gift)}`:'아직 선물을 정하지 않았어요'}<small>${full?'포도알을 다 채웠어요! 선물을 주고 아래 버튼을 눌러 주세요.':`${Grapes.GOAL-S.board.length}알 남았어요`}</small></p>
+    <label class="l" for="gift">다 채우면 받을 선물</label>
+    <div class="row"><input class="input grow" id="gift" value="${esc(S.gift)}" placeholder="예: 레고 자동차" maxlength="30"><button class="btn primary" id="giftSave">정하기</button></div>
+    ${full?'<p style="margin-top:12px"><button class="btn warn block" id="claim">🎁 선물 줬어요 · 새 포도송이 시작</button></p>':''}
+    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">한글, 셈하기, 구구단, 파닉스를 한 판씩 끝까지 풀면 과목마다 하루에 한 알씩 붙어요. 하루에 최대 4알이에요.</p>
+    ${S.history.length?`<p style="color:var(--muted);font-size:14px;margin:6px 0 0">지금까지 받은 선물: ${S.history.map(h=>esc(h.gift||'선물')).join(', ')}</p>`:''}</div>
+  <div class="card"><h3>이번 주 모은 별 ★ ${total}</h3>
+    <div class="week">${days.map(x=>`<div><span>${WD[x.d.getDay()]}</span><b>${DOC.study[x.s]||0}</b></div>`).join('')}</div>
+    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">공부방에서 문제를 맞히거나 받아쓰기를 잘하면 별이 쌓여요. 가족 모두의 화면에 같이 보여요.</p></div>
+  <div class="card"><h3>공부방에 있는 것</h3>
+    <div class="item"><span style="font-size:26px">가</span><div class="grow"><b>한글</b><div class="sub">받침 이사(연음) 원리, 받침 탐정, ㅔ와 ㅐ, 받아쓰기</div></div></div>
+    <div class="item"><span style="font-size:26px">➕</span><div class="grow"><b>덧셈 · 뺄셈</b><div class="sub">10칸 상자로 세기, 10 만들기 받아올림·받아내림</div></div></div>
+    <div class="item"><span style="font-size:26px">✖️</span><div class="grow"><b>구구단</b><div class="sub">묶음으로 보는 곱셈, 단별 퀴즈</div></div></div>
+    <div class="item"><span style="font-size:26px">🔤</span><div class="grow"><b>파닉스</b><div class="sub">알파벳 소리, 첫소리 찾기, 세 글자 낱말 만들기</div></div></div></div>`;
+  $('#giftSave').onclick=()=>act('setGift',{gift:$('#gift').value},'선물을 정했어요');
+  if(full)$('#claim').onclick=()=>{if(confirm('선물을 줬나요? 포도송이를 비우고 새로 시작해요.'))act('claimGift',{},'새 포도송이를 시작해요')};
+}
+const stickers=()=>DOC.stickers||{board:[],gift:'',history:[]};
+function todayStickers(){const day=ymd(new Date()),b=stickers().board;
+  return `<div class="today4" style="margin-bottom:8px">${Object.entries(Grapes.SUBJ).map(([k,v])=>{const got=b.some(x=>x.date===day&&x.subject===k);return`<div class="${got?'got':''}"><b>${got?'🍇':v.mark}</b>${v.name}</div>`}).join('')}</div>`}
+
+/* 설정 */
+const M_EMO=['👩','👨','🧒','👧','👦','👶','👵','👴','🙂','🐶','🐱'];
+function renderSettings(){
+  const link=location.origin+'/?join='+CODE;
+  app.innerHTML=`
+  <div class="card"><h3>화면 배경</h3><p style="color:var(--muted);margin:0 0 12px">가족 모두의 화면과 공부방이 같이 바뀌어요. 밤에는 눈부시지 않게 어두운 화면이 돼요.</p>
+    <div class="skins">${SKINS.map(([k,n])=>`<button data-skin-pick="${k}" class="${(DOC.skin||'airport')===k?'on':''}"><span class="box" data-skin="${k}"></span>${n}</button>`).join('')}</div></div>
+  <div class="card"><h3>가족 이름</h3><div class="row"><input class="input grow" id="fName" value="${esc(DOC.name)}" maxlength="20"><button class="btn primary" id="fSave">저장</button></div></div>
+  <div class="card"><h3>가족 구성원</h3>
+    ${DOC.members.map(m=>`<div class="item" data-m="${m.id}"><select class="input" style="width:76px;padding:8px" aria-label="얼굴">${M_EMO.concat(M_EMO.includes(m.emoji)?[]:[m.emoji]).map(e=>`<option${e===m.emoji?' selected':''}>${e}</option>`).join('')}</select>
+      <div class="grow"><input class="input" value="${esc(m.name)}" maxlength="12" aria-label="이름"><label style="font-size:14px;color:var(--muted);display:flex;gap:6px;align-items:center;margin-top:4px"><input type="checkbox" class="isKid"${m.role==='child'?' checked':''}> 아이예요 (아이 보드에 나와요)</label></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><button class="btn sm" data-save>저장</button><button class="btn sm" data-del>빼기</button></div></div>`).join('')}
+    <h3 style="margin-top:14px">가족 더하기</h3>
+    <div class="row"><select class="input" id="aEmo" style="width:76px;padding:8px" aria-label="얼굴">${M_EMO.map(e=>`<option>${e}</option>`).join('')}</select><input class="input grow" id="aName" placeholder="예: 할머니" maxlength="12"><button class="btn" id="aAdd">추가</button></div></div>
+  <div class="card"><h3>가족 코드</h3><div class="code">${CODE}</div>
+    <p style="color:var(--muted);font-size:15px">이 코드나 링크를 받은 사람은 우리집 보드를 보고 고칠 수 있어요. 가족에게만 보내 주세요.</p>
+    <button class="btn primary block" id="share">가족에게 링크 보내기</button></div>
+  <div class="card"><h3>홈 화면에 앱처럼 두기</h3>
+    <p><b>아이패드 · 아이폰</b> (사파리): 아래 공유 버튼 → <b>홈 화면에 추가</b>. 주소창 없이 꽉 찬 화면으로 열려요.</p>
+    <p><b>갤럭시 탭 · 갤럭시</b>: 삼성 인터넷은 메뉴(≡) → <b>현재 페이지 추가 → 홈 화면</b>, 크롬은 ⋮ → <b>홈 화면에 추가</b>.</p>
+    <p style="color:var(--muted)">거실 태블릿에는 ${esc(childName())} 보드를 켜 두면 좋아요. 화면이 꺼지지 않게 하려면 기기 설정에서 자동 잠금(화면 꺼짐) 시간을 길게 해 주세요.</p></div>
+  <div class="card"><h3>이 기기에서 나가기</h3><p style="color:var(--muted)">이 기기에서만 나가요. 우리집 보드는 그대로 있고 코드로 다시 들어올 수 있어요.</p>
+    <button class="btn block" id="leave">이 기기에서 나가기</button></div>
+  <div class="card"><h3>우리집 보드 지우기</h3><p style="color:var(--muted)">일정, 루틴, 한마디, 공부 기록이 <b>모두 지워지고 되돌릴 수 없어요.</b> 가족 모두의 기기에서 사라져요.</p>
+    <button class="btn warn block" id="wipe">우리집 보드 지우기</button></div>`;
+  $$('[data-skin-pick]').forEach(b=>b.onclick=()=>{applySkin(b.dataset.skinPick);act('setSkin',{skin:b.dataset.skinPick},'배경을 바꿨어요')});
+  $('#fSave').onclick=()=>act('setName',{name:$('#fName').value},'저장했어요');
+  $$('[data-m]').forEach(row=>{const id=row.dataset.m;
+    $('[data-save]',row).onclick=()=>act('updMember',{id,emoji:$('select',row).value,name:$('input.input',row).value,role:$('.isKid',row).checked?'child':'adult'},'저장했어요');
+    $('[data-del]',row).onclick=()=>{if(confirm(`${member(id)?.name}을(를) 가족에서 뺄까요?`))act('delMember',{id},'뺐어요')}});
+  $('#aAdd').onclick=()=>act('addMember',{emoji:$('#aEmo').value,name:$('#aName').value,role:'adult'},'추가했어요');
+  $('#share').onclick=async()=>{const text=`${DOC.name} 보드에 들어와요. 코드: ${CODE}`;
+    try{if(navigator.share){await navigator.share({title:DOC.name+' 보드',text,url:link});return}}catch(e){if(e.name==='AbortError')return}
+    try{await navigator.clipboard.writeText(text+'\n'+link);toast('링크를 복사했어요')}catch(e){prompt('이 링크를 복사해서 보내 주세요',link)}};
+  $('#leave').onclick=()=>{if(!confirm('이 기기에서 나갈까요?'))return;ls.set('hb-code',null);CODE=null;DOC=null;render()};
+  $('#wipe').onclick=async()=>{const ok=prompt('정말 지우려면 가족 이름을 그대로 적어 주세요: '+DOC.name);if(ok!==DOC.name){if(ok!==null)toast('이름이 달라서 지우지 않았어요');return}
+    try{await call('deleteFamily');ls.set('hb-code',null);CODE=null;DOC=null;render();toast('우리집 보드를 지웠어요')}catch(e){toast(e.message)}};
+}
+
+/* 아이 보드 */
+const SAY=[['🍚','배고파요'],['✅','다 했어요'],['💗','보고 싶어요'],['🙋','도와주세요'],['🥱','심심해요'],['🚽','화장실 가요']];
+function renderKid(){
+  const day=ymd(new Date()),rs=routinesFor(day),ch=child();
+  const KSAY={coming:'집에 오는 중',work:'회사에 있어요',school:'유치원에 있어요',out:'밖에 있어요',home:'집에 있어요',unknown:'아직 몰라요'};
+  const arr=DOC.members.filter(m=>m.role!=='child').map(m=>{const i=DOC.members.indexOf(m),s=statusOf(m),k=s?s.state:'unknown';return{m,i,s,k,o:ARR[k][2]}})
+    .sort((a,b)=>a.o-b.o||(a.s?.eta||'99').localeCompare(b.s?.eta||'99'));
+  app.innerHTML=`
+  <header class="fids-top kid-top">
+    <span class="ft-eye">${esc(ch?.name||'')} BOARD · 오늘도 신나게!</span>
+    <button class="ft-kid" id="adultBtn">어른 화면</button>
+    <h1 class="ft-name">${esc(ch?.name||'')}${ch?'아, ':''}안녕!</h1>
+    <div class="ft-r"><span class="t" id="clk"></span><span class="ft-date">${fmtDate(day)}</span></div>
+  </header>
+  <section class="fids kid-arr">
+    <h2 class="fids-h">${PLANE_IN}<span>도착</span><small>ARRIVALS · 누가 언제 와요?</small></h2>
+    ${arr.map(({m,i,s,k})=>`<div class="fids-row">
+      <span class="fr-time">${s?.eta||'--:--'}</span>
+      <span class="fr-main"><span class="fr-av" style="--c:var(--m${i%6})">${esc(m.emoji)}</span><b>${esc(m.name)}</b><small>${KSAY[k]}${s?.eta&&k!=='home'?` · ${fmtTime(s.eta)}${k==='coming'?' 도착':'에 와요'}`:''}</small></span>
+      <span class="fr-st ${ARR[k][1]}">${ARR[k][0]}</span></div>`).join('')}
+  </section>
+  <div class="card"><h3>오늘 할 일</h3>${rs.length?`<div class="rlist">${rs.map(r=>`<button class="rbtn${DOC.checks[day]?.[r.id]?' done':''}" data-r="${r.id}"><span class="e">${esc(r.emoji)}</span>${esc(r.title)}</button>`).join('')}</div>`:'<p class="empty">오늘은 할 일이 없어요!</p>'}</div>
+  <div class="two"><a class="bigstudy" href="/study.html">✏️ 공부방 <span style="font-size:20px">★ ${DOC.study[day]||0}</span></a><a class="bigstudy play" href="/games.html">✈️ 놀이터</a></div>
+  <div class="card"><h3>🍇 내 포도송이 ${stickers().board.length} / ${Grapes.GOAL}</h3>${todayStickers()}${Grapes.svg(stickers().board)}
+    ${stickers().gift?`<p class="giftline">다 채우면 🎁 ${esc(stickers().gift)}</p>`:''}</div>
+  <div class="card"><h3>엄마 아빠에게 말하기</h3><div class="say">${SAY.map(([e,t])=>`<button data-say="${t}">${e} ${t}</button>`).join('')}</div></div>
+  <div class="notes">${DOC.notes.filter(n=>!n.kid).slice(0,2).map(noteItem).join('')}</div>`;
+  tick();
+  $('#adultBtn').onclick=()=>{KID=false;ls.set('hb-kid',null);render();window.scrollTo(0,0)};
+  $$('.rbtn').forEach(b=>b.onclick=()=>act('toggleCheck',{date:day,rid:b.dataset.r},b.classList.contains('done')?'':'잘했어요! ✓'));
+  $$('[data-say]').forEach(b=>b.onclick=()=>act('addNote',{from:ch?.name||'아이',text:b.dataset.say,kid:true},'엄마 아빠에게 보냈어요'));
+}
+
+/* ---------- 시작 ---------- */
+(async()=>{
+  const jp=new URLSearchParams(location.search).get('join');
+  if(jp){history.replaceState(null,'',location.pathname);await join(jp);return}
+  render();await load();
+})();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>

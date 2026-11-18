@@ -1,0 +1,194 @@
+/* 배경 고르기: html[data-skin] 하나로 우리집 보드와 공부방이 함께 바뀐다.
+   모든 무늬는 이 파일 안에서 직접 그린 SVG/CSS다. 밤(어두운 화면)에는 눈부시지 않게 어두운 종이로 돌아간다. */
+:root,[data-skin="stationery"]{--skin-bg:var(--paper,#F7F5EE) linear-gradient(var(--rule,#DCE6F0) 1.5px,transparent 1.5px) 0 0/100% 34px}
+[data-skin="airport"]{--skin-bg:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='340'%3E%3Cg fill='%23fff' opacity='.9'%3E%3Cellipse cx='70' cy='62' rx='44' ry='15'/%3E%3Cellipse cx='96' cy='50' rx='28' ry='18'/%3E%3Cellipse cx='52' cy='54' rx='20' ry='13'/%3E%3Cellipse cx='318' cy='236' rx='50' ry='16'/%3E%3Cellipse cx='346' cy='222' rx='30' ry='19'/%3E%3Cellipse cx='292' cy='228' rx='22' ry='14'/%3E%3C/g%3E%3Cpath d='M130 200 q70 -48 140 -52' stroke='%23fff' stroke-width='3.5' stroke-dasharray='1 9' stroke-linecap='round' fill='none'/%3E%3Cg transform='translate(272 128) rotate(-8) scale(.62)' fill='%234F7FE0'%3E%3Cpath d='M4 17c0-3 4-4 8-4h32c8 0 14 2 16 4-2 2-8 4-16 4H12c-4 0-8-1-8-4z'/%3E%3Cpath d='M24 18h11l-8 13h-6zM27 13h7l-5-6h-5zM7 14 3 3h6l7 10z'/%3E%3C/g%3E%3Cg fill='%23fff'%3E%3Ccircle cx='296' cy='134' r='.9'/%3E%3C/g%3E%3C/svg%3E") 0 0/420px 340px,
+  linear-gradient(180deg,#9FD3FF 0%,#C9E7FF 45%,#EEF8FF 100%) fixed}
+[data-skin="yellow"]{--skin-bg:#F9DE73}
+[data-skin="dots"]{--skin-bg:
+  radial-gradient(circle,#BFE0FA 0 15px,transparent 16px) 0 0/112px 112px,
+  radial-gradient(circle,#BFE0FA 0 15px,transparent 16px) 56px 56px/112px 112px,#FEF9D6}
+[data-skin="stars"]{--skin-bg:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cpath fill='%23FFF6C9' stroke='%23FFF6C9' stroke-width='5' stroke-linejoin='round' d='M30 14l5 10 11 1.6-8 7.8 2 11-10-5.3-10 5.3 2-11-8-7.8L25 24zM90 74l5 10 11 1.6-8 7.8 2 11-10-5.3-10 5.3 2-11-8-7.8L85 84z'/%3E%3Ccircle cx='90' cy='30' r='4' fill='%23fff'/%3E%3Ccircle cx='30' cy='90' r='4' fill='%23fff'/%3E%3C/svg%3E") 0 0/120px 120px,#C7E3FA}
+[data-skin="stripes"]{--skin-bg:repeating-linear-gradient(90deg,#F29AB5 0 24px,#E57A9E 24px 48px)}
+[data-skin="pastel"]{--skin-bg:
+  radial-gradient(60% 40% at 85% 5%,#FFE9A3 0,transparent 70%),
+  radial-gradient(50% 35% at 10% 55%,#F8D3EC 0,transparent 70%),
+  radial-gradient(55% 40% at 80% 75%,#E4D7F7 0,transparent 70%),
+  radial-gradient(45% 30% at 95% 100%,#D8F0CF 0,transparent 70%),#FFF4EC fixed}
+[data-skin="sweet"]{--skin-bg:
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cg fill='none' stroke='%237BA3E0' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M30 40c-12-10-14 8 0 2 14 6 12-12 0-2z'/%3E%3Cpath d='M30 42l-6 9M30 42l6 9'/%3E%3C/g%3E%3Cg%3E%3Cpath d='M128 40c4-8 10-12 18-12' stroke='%235E9E6A' stroke-width='2' fill='none'/%3E%3Cpath d='M128 40c2 6 0 12-4 16M146 28c0 8-2 16-4 22' stroke='%235E9E6A' stroke-width='2' fill='none'/%3E%3Ccircle cx='122' cy='60' r='8' fill='%23F3C64B'/%3E%3Ccircle cx='141' cy='55' r='8' fill='%23F3C64B'/%3E%3C/g%3E%3Cg transform='translate(70 140)'%3E%3Cg fill='%23fff' stroke='%237BA3E0' stroke-width='1.6'%3E%3Ccircle cx='0' cy='-8' r='6'/%3E%3Ccircle cx='8' cy='0' r='6'/%3E%3Ccircle cx='0' cy='8' r='6'/%3E%3Ccircle cx='-8' cy='0' r='6'/%3E%3C/g%3E%3Ccircle r='4' fill='%23F3C64B'/%3E%3C/g%3E%3Cpath d='M170 140l2.5 7 7 2.5-7 2.5-2.5 7-2.5-7-7-2.5 7-2.5z M100 100l2 5 5 2-5 2-2 5-2-5-5-2 5-2z' fill='%239CB9EA'/%3E%3C/svg%3E") 0 0/200px 200px,#FFFCF8}
+
+body{background:var(--skin-bg)}
+@media (prefers-color-scheme: dark){html[data-skin] body{background:var(--paper) linear-gradient(var(--rule) 1.5px,transparent 1.5px) 0 0/100% 34px}}
+
+/* 무늬 위에서도 제목이 잘 읽히게 이름표를 붙인다 */
+html.patterned .top .fam,html.patterned .top .brand,html.patterned .kidtop>div:first-child,html.patterned .hello{
+  flex:0 1 auto;background:var(--card,#fff);border:2.5px solid var(--line,#1F2433);border-radius:14px;padding:6px 14px;box-shadow:2px 2px 0 var(--line,#1F2433)}
+html.patterned .top .fam+*{margin-left:auto}
+html.patterned .hello{margin-top:10px}
+html.patterned .top .brand{flex:0 1 auto;margin-right:auto}
+@media (prefers-color-scheme: dark){html.patterned .top .fam,html.patterned .top .brand,html.patterned .kidtop>div:first-child,html.patterned .hello{background:transparent;border-color:transparent;box-shadow:none;padding:0}}
+html.patterned .top{background:transparent}
+
+/* 배경 고르기 견본 */
+.skins{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.skins button{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:15px;font-weight:700}
+.skins .box{width:100%;aspect-ratio:1/1;border:2.5px solid var(--line,#1F2433);border-radius:14px;background:var(--skin-bg);background-attachment:scroll;box-shadow:2px 2px 0 var(--line,#1F2433)}
+.skins button.on .box{outline:4px solid var(--blue,#2F6FD6);outline-offset:3px}
+
+/* ===== 최종 정리: 모든 화면의 간격과 틀 (이 파일이 가장 나중에 읽혀서 앞 규칙을 덮는다) =====
+   제목 아래 20px · 카드 사이 16px · 섹션 이름표 앞 28px · 테두리는 얇은 선 하나, 그림자는 옅게 */
+html .top,html .gtop{align-items:center;padding-block:18px 20px}
+html .kidtop{padding-block:18px 20px}
+html.patterned .top .fam,html.patterned .top .brand,html.patterned .kidtop>div:first-child,html.patterned .hello{
+  border:1px solid var(--hair,#E3E6EC);box-shadow:var(--shadow-sm);border-radius:14px;padding:8px 16px}
+html[data-skin] .sec{border:0;box-shadow:none;border-radius:999px;padding:6px 16px 5px 12px;margin:28px 0 12px}
+html[data-skin] main.wrap>.sec:first-child{margin-top:0}
+html[data-skin] .title{border:0;box-shadow:none;border-radius:999px;padding:6px 16px 5px 12px;margin:4px 0 16px}
+html[data-skin] .end .title{padding:0;margin:8px 0}
+html[data-skin] .board{border:0;box-shadow:var(--shadow)}
+html[data-skin] .card,html[data-skin] .tile,html[data-skin] .fids,html[data-skin] .bigstudy,html[data-skin] .notes,html[data-skin] .yard,html[data-skin] .mapwrap,html[data-skin] .stage2{margin-top:0;margin-bottom:16px}
+html[data-skin] .yard{gap:16px}
+html[data-skin] .notes{gap:12px}
+html[data-skin] .note{margin-bottom:0}
+html[data-skin] .fids-top{margin:0 0 16px}
+html[data-skin] main.wrap>.fids-top:first-child{margin-top:18px}
+html[data-skin] .bigstudy{background-image:none}
+html[data-skin] .two{gap:16px}
+html[data-skin] .two .bigstudy{margin-bottom:16px}
+html[data-skin] .hello{margin:4px 0 16px}
+html[data-skin] .menu{gap:16px;margin-top:0}
+html[data-skin] .hub{gap:16px}
+html[data-skin] .cal{grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+html[data-skin] .cal button{min-width:0;padding-left:0;padding-right:0}
+/* 아이폰 사파리: 날짜·시간 칸이 자기 너비를 고집해 옆 칸과 겹치는 문제 */
+html[data-skin] .two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+html[data-skin] .two>*{min-width:0}
+html[data-skin] .input{min-width:0;max-width:100%;width:100%}
+html[data-skin] input[type="date"].input,html[data-skin] input[type="time"].input{-webkit-appearance:none;appearance:none;display:block;line-height:24px;text-align:left}
+html[data-skin] input[type="date"]::-webkit-date-and-time-value,html[data-skin] input[type="time"]::-webkit-date-and-time-value{text-align:left;margin:0}
+/* 머리말: "세윤이네 일정"처럼 한 줄, 같은 손글씨·같은 크기 */
+html .top .fam{display:flex;align-items:baseline;gap:10px;flex-wrap:nowrap;min-width:0}
+html .top .fam small,html .top .fam h1{font-family:var(--f-hand);font-weight:400;font-size:clamp(26px,7vw,34px);line-height:1.15;white-space:nowrap}
+html .top .fam small{color:var(--muted)}
+html .top .fam h1{color:var(--ink)}
+/* 머리말: 찢은 테이프 두 장을 엇갈려 붙인 이름표 (윗장 민트 "세윤이네", 아랫장 종이 "일정") */
+html .top .fam,html.patterned .top .fam{display:flex;flex-direction:column;align-items:flex-start;gap:0;background:transparent;border:0;box-shadow:none;padding:0;flex:0 1 auto}
+html .top .fam small,html .top .fam h1{position:relative;display:inline-block;font-family:var(--f-hand);font-weight:400;white-space:nowrap;line-height:1.2;
+  clip-path:polygon(0 6%,3% 0,6% 10%,9% 2%,12% 8%,100% 0,97% 14%,100% 28%,96% 44%,100% 60%,97% 76%,100% 92%,97% 100%,0 100%,3% 86%,0 70%,4% 54%,0 38%,3% 22%)}
+html .top .fam small{font-size:clamp(17px,4.6vw,21px);color:#24453B;background:#A8E3D2;padding:5px 18px 4px;transform:rotate(-2.5deg);z-index:2;box-shadow:none}
+html .top .fam h1{font-size:clamp(28px,7.6vw,38px);color:#1F2433;background:#ECEBE6;padding:4px 22px 3px;margin:-6px 0 0 22px;transform:rotate(1.6deg);
+  background-image:linear-gradient(rgba(255,255,255,.35),rgba(0,0,0,.03))}
+@media (prefers-color-scheme: dark){html .top .fam small{background:#3E8F7A;color:#F1FBF7}html .top .fam h1{background:#D9D7CF;color:#1F2433}}
+html .top .fam+*{margin-left:auto}
+/* 테이프를 반투명하게: 뒤 배경이 살짝 비친다 */
+html .top .fam small{background:rgba(130,215,195,.62)}
+html .top .fam h1{background:rgba(238,237,232,.72);background-image:linear-gradient(90deg,rgba(255,255,255,.18),rgba(255,255,255,0) 40%,rgba(255,255,255,.14))}
+@media (prefers-color-scheme: dark){html .top .fam small{background:rgba(62,143,122,.7)}html .top .fam h1{background:rgba(217,215,207,.78)}}
+/* 아래 메뉴 7칸 (놀이 분리) */
+html nav.tabs .in{grid-template-columns:repeat(7,1fr);max-width:700px}
+html nav.tabs button{font-size:12px;gap:2px;min-width:0}
+html nav.tabs svg{width:24px;height:24px}
+@media (max-width:400px){html nav.tabs .in{padding:5px}html nav.tabs button{font-size:11px;border-radius:16px}html nav.tabs svg{width:22px;height:22px}}
+/* 놀이 탭 카드 */
+.playcard{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:16px;text-decoration:none;color:var(--ink)}
+.playcard:active{transform:translateY(1px);box-shadow:var(--shadow-sm)}
+.playcard .art{width:72px;height:72px;border-radius:14px;display:grid;place-items:center;font-size:38px;flex:none}
+.playcard .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.playcard b{font-family:var(--f-display);font-weight:400;font-size:19px;line-height:1.2}
+.playcard small{color:var(--muted);font-size:14px;line-height:1.4}
+.playcard .go{font-size:30px;color:var(--muted);flex:none}
+/* 세윤 보드: 공항 안내판 머리 + 도착 안내판 (아이용으로 조금 크게) */
+.kid-top .ft-name{font-size:clamp(30px,8.5vw,52px)}
+.kid-arr .fr-av{width:42px;height:42px;font-size:24px}
+.kid-arr .fr-main b{font-size:21px}
+.kid-arr .fr-main small{font-size:14px;color:#C9CFDA}
+.kid-arr .fr-time{font-size:26px}
+
+/* ===================================================================
+   배경과 어울리는 틀: 배경마다 대표색(--tint)과 연한 색(--tint-soft), 진한 글씨색(--tint-ink)
+   모든 틀은 이 세 색으로만 칠한다. 고정 검정·노랑은 쓰지 않는다.
+   =================================================================== */
+html[data-skin="airport"]   {--tint:#3B78D8;--tint-soft:#DCEAFF;--tint-ink:#1B3E78}
+html[data-skin="stationery"]{--tint:#3A8763;--tint-soft:#DDF1E6;--tint-ink:#1D4F37}
+html[data-skin="yellow"]    {--tint:#D9822B;--tint-soft:#FFF0D6;--tint-ink:#6E400C}
+html[data-skin="dots"]      {--tint:#4A90D9;--tint-soft:#E1EFFC;--tint-ink:#1E4E80}
+html[data-skin="stars"]     {--tint:#3A6FBF;--tint-soft:#FFF5C8;--tint-ink:#25406E}
+html[data-skin="stripes"]   {--tint:#D2557F;--tint-soft:#FDE2EC;--tint-ink:#7A1E44}
+html[data-skin="pastel"]    {--tint:#9677CF;--tint-soft:#F0E8FB;--tint-ink:#4B3478}
+html[data-skin="sweet"]     {--tint:#6E95D6;--tint-soft:#E7EFFC;--tint-ink:#2C4A80}
+@media (prefers-color-scheme: dark){html[data-skin]{--tint-soft:color-mix(in srgb,var(--tint) 30%,#1A2335);--tint-ink:#F2F5FA}}
+/* 예전 이름의 색 토큰도 대표색을 따르게 한다 (공부방·놀이터 포함) */
+html[data-skin]{--sign:var(--tint-soft);--sign-ink:var(--tint-ink);--tape1:var(--tint-soft);--plate:var(--tint-ink);--accent:var(--tint);--blue:var(--tint);--c-han:var(--tint)}
+
+/* 버튼·칩·메뉴 */
+html[data-skin] .btn.primary{background:var(--tint);color:#fff;border-color:transparent}
+html[data-skin] .chip.on,html[data-skin] .seg button.on{background:var(--tint-soft);color:var(--tint-ink);border-color:transparent}
+html[data-skin] .pill,html[data-skin] .pill.kid{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] nav.tabs .in{background:var(--tint-ink);border:0}
+html[data-skin] nav.tabs button{color:#fff}
+html[data-skin] nav.tabs button.on{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .toast{background:var(--tint-ink);color:#fff}
+html[data-skin] .bigstudy{background:var(--tint);color:#fff}
+html[data-skin] .bigstudy.play{background:var(--tint-ink);color:#fff}
+
+/* 제목 띠와 이름표 */
+html[data-skin] .card>h3:first-child,html[data-skin] .tile .tl,html[data-skin] .sec,html[data-skin] .title{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .sec::before,html[data-skin] .title::before{display:none}
+html .top .fam small{background:color-mix(in srgb,var(--tint) 32%,transparent);color:var(--tint-ink)}
+
+/* 맨 위 이름판: 대표색 바탕 + 흰 글씨 + 흰 숫자 칸 */
+html[data-skin] .fids-top{--fy:#fff;background:var(--tint);color:#fff;border:0;box-shadow:var(--shadow)}
+html[data-skin] .fids-top::after{background:repeating-linear-gradient(90deg,rgba(255,255,255,.7) 0 14px,transparent 14px 22px);opacity:1}
+html[data-skin] .ft-eye{color:rgba(255,255,255,.85)}
+html[data-skin] .ft-name{color:#fff}
+html[data-skin] .ft-r .t{color:var(--tint-ink)}
+html[data-skin] .ft-r .ap{color:rgba(255,255,255,.85)}
+html[data-skin] .ft-date{color:#fff}
+html[data-skin] .fids-top .fl{background:linear-gradient(#fff 0 49%,color-mix(in srgb,var(--tint) 35%,#fff) 49% 51%,#F3F5F9 51%);color:var(--tint-ink)}
+html[data-skin] .ft-kid{border-color:rgba(255,255,255,.9);color:#fff}
+
+/* ARRIVALS / DEPARTURES: 흰 몸통 + 연한 대표색 띠 */
+html[data-skin] .fids{background:var(--card);color:var(--ink);border:1px solid var(--hair);box-shadow:var(--shadow)}
+html[data-skin] .fids-h{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .fids-row{border-top:1px solid var(--hair)}
+html[data-skin] .fids-cols{color:var(--muted)}
+html[data-skin] .fr-time{color:var(--tint)}
+html[data-skin] .fr-main b{color:var(--ink)}
+html[data-skin] .fr-main small{color:var(--muted)}
+html[data-skin] .fr-av{border:1px solid var(--hair)}
+html[data-skin] button.fids-row:active,html[data-skin] .fids-row.on{background:var(--tint-soft)}
+html[data-skin] .st-go{background:var(--tint);color:#fff}
+html[data-skin] .st-in{background:#D7F2E2;color:#16693E}
+html[data-skin] .st-away{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .st-wait{background:transparent;color:var(--muted);border:1px solid var(--hair)}
+html[data-skin] .st-done{color:var(--muted)}
+html[data-skin] .fids-empty .fr-main{color:var(--muted)}
+html[data-skin] .fids-add{color:var(--tint-ink);border-top:1px dashed var(--hair)}
+html[data-skin] .fids #stedit{background:var(--sunk)}
+@media (prefers-color-scheme: dark){html[data-skin] .st-in{background:#173D29;color:#BFF0D3}}
+
+/* 일정 목록(알림장 줄)과 상태 */
+html[data-skin] .card.notebook{background:var(--card);color:var(--ink);background-image:linear-gradient(90deg,transparent 74px,color-mix(in srgb,var(--tint) 45%,transparent) 74px,color-mix(in srgb,var(--tint) 45%,transparent) 76px,transparent 76px)}
+html[data-skin] .card.notebook .tm{color:var(--tint)}
+html[data-skin] .tag{background:var(--tint-soft);color:var(--tint-ink);border-color:transparent}
+html[data-skin] .person span.st{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .ring .r1{stroke:var(--tint)}
+html[data-skin] .cal button.today{background:var(--tint-soft);color:var(--tint-ink);border-color:var(--tint)}
+html[data-skin] .cal button.sel{background:var(--tint);color:#fff;border-color:var(--tint)}
+html[data-skin] .cal .dots i{background:var(--tint)}
+html[data-skin] .t-soon .dd{color:var(--tint)}
+html[data-skin] .note.kid{background:var(--tint-soft)}
+
+/* 세윤 보드: 아이용으로 조금 크게, 같은 흰 몸통 */
+html[data-skin] body.kid .say button{background:var(--tint-soft);color:var(--tint-ink);border:0;font-size:clamp(17px,4.8vw,22px);padding:0 6px}
+html[data-skin] .rbtn.done{background:#DDF3E7}
+html[data-skin] .rbtn.done::after{background:#DDF3E7}
+
+/* 놀이터·공부방의 노란 장식도 대표색으로 */
+html[data-skin] .gtop a,html[data-skin] .gtop button{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .ctrl{background:var(--tint);color:#fff}
+html[data-skin] .ctrl.alt{background:var(--card);color:var(--ink)}
+html[data-skin] .stars{background:var(--tint-soft);color:var(--tint-ink)}
+html[data-skin] .back{background:var(--tint-soft);color:var(--tint-ink)}

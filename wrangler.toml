@@ -1,0 +1,7 @@
+name = "urijip-board"
+pages_build_output_dir = "public"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "DATA"
+id = "ef8f0abda9374d23a677cc1ca4a0824c"

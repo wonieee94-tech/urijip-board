@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>세윤이 놀이터</title>
+<meta name="theme-color" content="#14171D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icon-180.png">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/theme.css">
+<link rel="stylesheet" href="/skins.css">
+<style>
+/* 놀이터: 공항 표지판 틀 위에 지도·활주로·여행 놀이 */
+main.wrap{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
+.gtop{display:flex;align-items:center;gap:10px;padding-block:14px 6px}
+.gtop a,.gtop button{text-decoration:none;color:var(--sign-ink);background:var(--sign);border:0;box-shadow:var(--shadow-sm);border-radius:999px;padding:6px 14px;font-weight:700;font-size:15px;min-height:40px;display:inline-flex;align-items:center}
+.gtop h1{font-family:var(--f-display);font-weight:400;font-size:clamp(22px,5.6vw,30px);flex:1;min-width:0}
+.hub{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:700px){.hub{grid-template-columns:1fr 1fr 1fr}}
+.gcard{border:1px solid var(--hair);border-radius:var(--r);background:var(--card);box-shadow:var(--shadow);overflow:hidden;padding:0;text-align:left;display:flex;flex-direction:column}
+.gcard .art{height:130px;display:grid;place-items:center;font-size:56px}
+.gcard b{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;padding:12px 14px 0}
+.gcard span{display:block;color:var(--muted);font-size:15px;padding:2px 14px 14px}
+.gcard:active{transform:translateY(1px);box-shadow:var(--shadow-sm)}
+
+/* 세계 지도 */
+.mapwrap{background:#9ED3F5;border:0;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);position:relative}
+#map{display:block;width:100%;height:auto;touch-action:manipulation}
+.mapscroll{overflow:auto;-webkit-overflow-scrolling:touch;aspect-ratio:1000/503;touch-action:pan-x pan-y}
+#map{display:block;height:auto}
+.zoom{position:absolute;right:10px;bottom:10px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:44px;height:44px;border-radius:12px;border:1px solid var(--hair);background:#fff;color:#111318;font-size:24px;font-weight:700;box-shadow:var(--shadow-sm)}
+#map{min-width:100%}
+#map .ocean{fill:#CFE8F7}
+#map .c{stroke:#fff;stroke-width:.7;stroke-linejoin:round}
+#map .c0{fill:#F6D776}#map .c1{fill:#A6DBA9}#map .c2{fill:#F5B0C0}#map .c3{fill:#A9C9F2}#map .c4{fill:#F4BB86}#map .c5{fill:#CDB8EB}
+#map .c.kr{fill:#FF7A45;stroke:#111318;stroke-width:1.2}
+#map .night{fill:#14204A;opacity:.33;pointer-events:none}
+#map .sun{fill:#FFD34E;stroke:#E7A800;stroke-width:2}
+#map .oceans text{font-size:15px;font-style:italic;letter-spacing:.3em;fill:#5C86A8;text-anchor:middle;pointer-events:none}
+#map .cpin circle{fill:#E5512D;stroke:#fff;stroke-width:1}
+#map .cpin.on circle{fill:#FFC72C;stroke:#111;stroke-width:1.2}
+#map .cpin .hit{fill:transparent;stroke:none}
+#map .cpin text{font-size:11px;font-weight:700;fill:#111318;paint-order:stroke;stroke:#fff;stroke-width:3px;text-anchor:middle}
+.legend2{display:flex;gap:14px;justify-content:center;font-size:14px;color:var(--muted);margin:8px 0 0}
+.legend2 i{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid var(--plate)}
+.city{display:grid;grid-template-columns:auto 1fr;gap:12px 16px;align-items:center}
+.city .ana{width:120px;height:120px}
+.ana circle.face{fill:var(--card);stroke:var(--plate);stroke-width:3}
+.ana.nightc circle.face{fill:#1B2A57}
+.ana line{stroke:var(--plate);stroke-linecap:round}
+.ana.nightc line{stroke:#FFC72C}
+.ana .tick{stroke-width:2}
+.ana.nightc .tick{stroke:#9AA3B2}
+.city .nm{font-family:var(--f-display);font-size:24px;line-height:1.1}
+.city .dg{font-family:var(--f-display);font-size:30px;color:var(--warm);line-height:1.1}
+.city .diff{font-size:17px;margin-top:4px}
+.city .diff b{color:var(--blue)}
+.city .row{grid-column:1/-1}
+.cities{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.cities button{border:1px solid var(--hair);border-radius:12px;background:var(--card);padding:10px;text-align:left;font-size:15px;box-shadow:var(--shadow-sm)}
+.cities button b{display:block;font-size:17px}
+.cities button .t{font-family:var(--f-display);font-size:22px;color:var(--warm)}
+.cities button.on{background:var(--sign);color:var(--sign-ink)}
+
+/* 비행 놀이 */
+.stage2{position:relative;border:0;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:#9FD3FF;touch-action:none;-webkit-user-select:none;user-select:none}
+.stage2 canvas{display:block;width:100%;height:auto;touch-action:none}
+.hud{position:absolute;left:10px;right:10px;top:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
+.hudbox{background:rgba(20,23,29,.86);color:#EEF1F6;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;line-height:1.3}
+.hudbox .v{font-family:var(--f-display);font-size:22px;color:#FFC72C;font-weight:400}
+.gauge{width:120px;height:10px;border-radius:5px;background:#2A303C;position:relative;margin-top:4px;overflow:hidden}
+.gauge i{position:absolute;left:0;top:0;bottom:0;background:#FFC72C}
+.gauge u{position:absolute;top:0;bottom:0;background:rgba(47,191,113,.55)}
+.papi{display:flex;gap:4px;margin-top:4px}
+.papi i{width:14px;height:14px;border-radius:50%;border:1.5px solid #111}
+.papi i.w{background:#fff}.papi i.r{background:#E5322D}
+.prog{width:min(52vw,260px);height:10px;border-radius:5px;background:#2A303C;position:relative;margin-top:4px}
+.prog i{position:absolute;left:0;top:0;bottom:0;background:#FFC72C;border-radius:5px}
+.msg{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,23,29,.55);text-align:center;padding:16px}
+.msg .box{background:var(--card);color:var(--ink);border:0;border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;max-width:420px}
+.msg .box h3{font-family:var(--f-display);font-weight:400;font-size:24px;margin-bottom:6px}
+.msg .box p{margin:4px 0 12px}
+.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.ctrl{border:0;border-radius:var(--r);background:var(--sign);color:var(--sign-ink);min-height:84px;font-size:20px;font-weight:700;box-shadow:var(--shadow);touch-action:none;-webkit-user-select:none;user-select:none}
+.ctrl.alt{background:var(--card);color:var(--ink);border:1px solid var(--hair)}
+.ctrl.held{transform:translateY(2px);box-shadow:var(--shadow-sm);filter:brightness(.92)}
+.ctrl small{display:block;font-size:13px;font-weight:400;opacity:.8}
+.helptxt{color:var(--muted);font-size:15px;margin:10px 2px 0}
+
+/* 도착 엽서·여권 */
+.dests{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.dests button{border:1px solid var(--hair);border-radius:var(--r);background:var(--card);box-shadow:var(--shadow-sm);padding:12px;text-align:left}
+.dests button .f{font-size:34px;line-height:1.1}
+.dests button b{display:block;font-family:var(--f-display);font-weight:400;font-size:19px}
+.dests button span{color:var(--muted);font-size:14px}
+.postcard{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start}
+.postcard .pics{font-size:44px;letter-spacing:.1em}
+.postcard ul{margin:8px 0 0;padding-left:18px}
+.postcard li{margin:4px 0}
+.stamp{width:120px;height:120px;border-radius:50%;border:4px double var(--pen);color:var(--pen);display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(-12deg);font-weight:700;text-align:center;line-height:1.15}
+.stamp b{font-family:var(--f-display);font-weight:400;font-size:26px}
+.stamp small{font-size:11px}
+.passport{display:flex;flex-wrap:wrap;gap:12px}
+.passport .stamp{width:96px;height:96px}
+.passport .stamp b{font-size:20px}
+.passport .stamp:nth-child(2n){transform:rotate(9deg);color:var(--blue);border-color:var(--blue)}
+.greet{font-family:var(--f-hand);font-size:26px;margin-left:4px}
+</style>
+</head>
+<body>
+<main class="wrap" id="app"></main>
+<script src="/world-map.js"></script>
+<script>
+const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
+const app=$('#app');
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const PATTERNED=['airport','dots','stars','stripes','sweet'];
+(function(k){k=k||'airport';document.documentElement.dataset.skin=k;document.documentElement.classList.toggle('patterned',PATTERNED.includes(k))})(ls.get('hb-skin'));
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let voices=[];try{voices=speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>voices=speechSynthesis.getVoices()}catch(e){}
+function say(text,lang='ko-KR',rate=.85){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;const v=voices.find(v=>v.lang.replace('_','-').toLowerCase().startsWith(lang.toLowerCase().slice(0,2)));if(v)u.voice=v;u.rate=rate;speechSynthesis.speak(u)}catch(e){}}
+
+/* ---------- 도시와 시간 ---------- */
+const CITIES=[
+ {id:'seoul',nm:'서울',ct:'대한민국',fl:'🇰🇷',lon:127,lat:37.5,tz:'Asia/Seoul',hi:['안녕하세요','ko-KR','안녕하세요']},
+ {id:'tokyo',nm:'도쿄',ct:'일본',fl:'🇯🇵',lon:139.7,lat:35.7,tz:'Asia/Tokyo',hi:['こんにちは','ja-JP','곤니치와']},
+ {id:'beijing',nm:'베이징',ct:'중국',fl:'🇨🇳',lon:116.4,lat:39.9,tz:'Asia/Shanghai',hi:['你好','zh-CN','니하오']},
+ {id:'bangkok',nm:'방콕',ct:'태국',fl:'🇹🇭',lon:100.5,lat:13.7,tz:'Asia/Bangkok',hi:['สวัสดี','th-TH','사왓디']},
+ {id:'sydney',nm:'시드니',ct:'호주',fl:'🇦🇺',lon:151.2,lat:-33.9,tz:'Australia/Sydney',hi:["G'day",'en-AU','그다이']},
+ {id:'dubai',nm:'두바이',ct:'아랍에미리트',fl:'🇦🇪',lon:55.3,lat:25.2,tz:'Asia/Dubai',hi:['مرحبا','ar-SA','마르하바']},
+ {id:'cairo',nm:'카이로',ct:'이집트',fl:'🇪🇬',lon:31.2,lat:30,tz:'Africa/Cairo',hi:['أهلا','ar-EG','아흘란']},
+ {id:'paris',nm:'파리',ct:'프랑스',fl:'🇫🇷',lon:2.35,lat:48.9,tz:'Europe/Paris',hi:['Bonjour','fr-FR','봉주르']},
+ {id:'london',nm:'런던',ct:'영국',fl:'🇬🇧',lon:-.1,lat:51.5,tz:'Europe/London',hi:['Hello','en-GB','헬로']},
+ {id:'newyork',nm:'뉴욕',ct:'미국',fl:'🇺🇸',lon:-74,lat:40.7,tz:'America/New_York',hi:['Hello','en-US','헬로']},
+ {id:'la',nm:'로스앤젤레스',ct:'미국',fl:'🇺🇸',lon:-118.2,lat:34,tz:'America/Los_Angeles',hi:['Hi','en-US','하이']},
+ {id:'hawaii',nm:'하와이',ct:'미국',fl:'🇺🇸',lon:-157.8,lat:21.3,tz:'Pacific/Honolulu',hi:['Aloha','en-US','알로하']},
+ {id:'saopaulo',nm:'상파울루',ct:'브라질',fl:'🇧🇷',lon:-46.6,lat:-23.5,tz:'America/Sao_Paulo',hi:['Olá','pt-BR','올라']},
+];
+function partsIn(tz,d=new Date()){const o={};new Intl.DateTimeFormat('en-US',{timeZone:tz,year:'numeric',month:'numeric',day:'numeric',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(d).forEach(p=>o[p.type]=+p.value||p.value);return o}
+function tzOffsetMin(tz,d=new Date()){const p=partsIn(tz,d);return (Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute)-Math.floor(d.getTime()/6e4)*6e4)/6e4}
+const hm=p=>`${p.hour<12?'오전':'오후'} ${p.hour%12||12}:${String(p.minute).padStart(2,'0')}`;
+const isNight=p=>p.hour<6||p.hour>=19;
+function diffText(c){
+  if(c.id==='seoul')return '여기가 우리 집이 있는 곳이에요!';
+  const d=(tzOffsetMin(c.tz)-tzOffsetMin('Asia/Seoul'))/60,a=Math.abs(d),n=Number.isInteger(a)?a:a.toFixed(1);
+  const ps=partsIn('Asia/Seoul'),pc=partsIn(c.tz);const dayDiff=Date.UTC(pc.year,pc.month-1,pc.day)-Date.UTC(ps.year,ps.month-1,ps.day);
+  let s=d===0?'서울과 시간이 똑같아요.':d<0?`서울보다 <b>${n}시간 늦어요.</b>`:`서울보다 <b>${n}시간 빨라요.</b>`;
+  if(dayDiff<0)s+=' 여기는 아직 <b>어제</b>예요!';else if(dayDiff>0)s+=' 여기는 벌써 <b>내일</b>이에요!';
+  return s;
+}
+function anaClock(p){const h=(p.hour%12+p.minute/60)*30,m=p.minute*6,rad=a=>(a-90)*Math.PI/180;
+  const ticks=[...Array(12)].map((_,i)=>{const a=rad(i*30);return`<line class="tick" x1="${50+40*Math.cos(a)}" y1="${50+40*Math.sin(a)}" x2="${50+44*Math.cos(a)}" y2="${50+44*Math.sin(a)}"/>`}).join('');
+  return `<svg class="ana${isNight(p)?' nightc':''}" viewBox="0 0 100 100" aria-hidden="true"><circle class="face" cx="50" cy="50" r="46"/>${ticks}
+    <line x1="50" y1="50" x2="${50+24*Math.cos(rad(h))}" y2="${50+24*Math.sin(rad(h))}" stroke-width="6"/>
+    <line x1="50" y1="50" x2="${50+36*Math.cos(rad(m))}" y2="${50+36*Math.sin(rad(m))}" stroke-width="3.5"/><circle cx="50" cy="50" r="4" fill="#E5512D"/></svg>`}
+
+/* ---------- 세계 지도 (Natural Earth 공개 지도 자료, world-map.js) ---------- */
+const WM=window.WORLD,RAD=Math.PI/180;
+// 밀러 도법: tools/map/build-map.mjs 와 같은 식이라 도시 점이 지도와 딱 맞는다
+const proj=(lon,lat)=>[WM.tx+WM.k*lon*RAD,WM.ty-WM.k*1.25*Math.log(Math.tan(Math.PI/4+.4*Math.max(-80,Math.min(84,lat))*RAD))];
+const OCEANS=[['태평양',-140,8],['태평양',165,22],['대서양',-38,28],['대서양',-15,-25],['인도양',78,-22],['북극해',0,80]];
+let countriesSvg='';
+function countries(){if(!countriesSvg)countriesSvg=WM.paths.map(([d,c,id])=>`<path class="c c${c}${id==='410'?' kr':''}" d="${d}"/>`).join('');return countriesSvg}
+function nightRects(){const now=new Date(),uh=now.getUTCHours()+now.getUTCMinutes()/60;let r='';const bw=WM.k*5*RAD;
+  for(let lon=-180;lon<180;lon+=5){const sol=((uh+(lon+2.5)/15)%24+24)%24;if(sol<6||sol>=18)r+=`<rect class="night" x="${proj(lon,0)[0].toFixed(1)}" y="0" width="${(bw+.6).toFixed(1)}" height="${WM.h}"/>`}
+  const sunLon=((12-uh)*15+540)%360-180,[sx,sy]=proj(sunLon,Math.round(-23*Math.cos((now.getUTCMonth()+.5)/12*2*Math.PI)));
+  return r+`<circle class="sun" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="14"/>`}
+
+let selCity='paris',mapTimer=null,mapZoom=1;
+function renderMap(){
+  app.innerHTML=`${topbar('세계 시계 지도','hub')}
+  <div class="mapwrap"><div class="mapscroll" id="mapscroll"><svg id="map" viewBox="0 0 ${WM.w} ${WM.h}" role="img" aria-label="나라별로 색칠하고 낮과 밤을 칠한 세계 지도">
+    <rect class="ocean" width="${WM.w}" height="${WM.h}"/><g class="countries">${countries()}</g><g id="night"></g>
+    <g class="oceans">${OCEANS.map(([n,lo,la])=>{const[x,y]=proj(lo,la);return`<text x="${x.toFixed(0)}" y="${y.toFixed(0)}">${n}</text>`}).join('')}</g><g id="pins"></g></svg></div>
+    <div class="zoom"><button id="zin" aria-label="크게 보기">＋</button><button id="zout" aria-label="작게 보기">－</button></div></div>
+  <p class="legend2"><span><i style="background:#CFE8F7"></i>낮</span><span><i style="background:#5E6F9E"></i>밤</span><span>☀️ 지금 해가 가장 높은 곳</span><span><i style="background:#FF7A45"></i>우리나라</span></p>
+  <div class="card city" id="city" style="margin-top:14px"></div>
+  <div class="cities" id="cities"></div>`;
+  const draw=()=>{if(!$('#map')){clearInterval(mapTimer);return}
+    $('#night').innerHTML=nightRects();
+    const pr=1/Math.sqrt(mapZoom);
+    $('#pins').innerHTML=CITIES.map(c=>{const p=partsIn(c.tz),[x,y]=proj(c.lon,c.lat),on=c.id===selCity;return`<g class="cpin${on?' on':''}" data-c="${c.id}" style="cursor:pointer"><circle class="hit" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${22*pr}"/><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(on?13:9)*pr}"/>
+      ${on?`<text x="${x.toFixed(1)}" y="${(y-20*pr).toFixed(1)}" style="font-size:${26*pr}px">${c.nm} ${p.hour}:${String(p.minute).padStart(2,'0')}</text>`:''}</g>`}).join('');
+    const c=CITIES.find(x=>x.id===selCity),p=partsIn(c.tz);
+    $('#city').innerHTML=`${anaClock(p)}<div><div class="nm">${c.fl} ${c.nm}</div><div style="color:var(--muted)">${c.ct} · ${isNight(p)?'🌙 지금은 밤':'☀️ 지금은 낮'}</div>
+      <div class="dg">${hm(p)}</div><div class="diff">${diffText(c)}</div></div>
+      <div class="row"><button class="btn primary" id="hiBtn">🔊 ${c.ct} 인사: <span class="greet">${c.hi[2]}</span></button></div>`;
+    $('#hiBtn').onclick=()=>say(c.hi[0],c.hi[1],.8);
+    $('#cities').innerHTML=CITIES.map(c=>{const p=partsIn(c.tz);return`<button data-c="${c.id}" class="${c.id===selCity?'on':''}"><b>${c.fl} ${c.nm}</b><span class="t">${hm(p)}</span> ${isNight(p)?'🌙':'☀️'}</button>`}).join('');
+    $$('[data-c]').forEach(b=>b.onclick=()=>{selCity=b.dataset.c;draw();say(CITIES.find(x=>x.id===selCity).nm+'는 지금 '+hm(partsIn(CITIES.find(x=>x.id===selCity).tz)))});
+  };
+  const setZoom=z=>{mapZoom=Math.max(1,Math.min(4,z));$('#map').style.width=(mapZoom*100)+'%';draw();
+    const c=CITIES.find(x=>x.id===selCity),[x,y]=proj(c.lon,c.lat),sc=$('#mapscroll'),m=$('#map');
+    sc.scrollLeft=x/WM.w*m.clientWidth-sc.clientWidth/2;sc.scrollTop=y/WM.h*m.clientHeight-sc.clientHeight/2};
+  $('#zin').onclick=()=>setZoom(mapZoom*2);$('#zout').onclick=()=>setZoom(mapZoom/2);
+  draw();setZoom(mapZoom);clearInterval(mapTimer);mapTimer=setInterval(draw,30000);
+}
+
+/* ---------- 비행 놀이 엔진 (활주로·여행 공용) ---------- */
+let W=800;const H=450,GY=372;
+const DESTS=[
+ {id:'tokyo',nm:'도쿄',ct:'일본',fl:'🇯🇵',code:'NRT',tz:'Asia/Tokyo',secs:35,pics:'🗼🍣🚅🗻',hi:['こんにちは','ja-JP','곤니치와'],
+  facts:['도쿄 타워는 빨간색과 흰색으로 칠해져 있어요.','일본 사람들은 초밥(스시)을 즐겨 먹어요.','신칸센이라는 아주 빠른 기차가 있어요.','후지산은 일본에서 가장 높은 산이에요.']},
+ {id:'paris',nm:'파리',ct:'프랑스',fl:'🇫🇷',code:'CDG',tz:'Europe/Paris',secs:60,pics:'🗼🥐🎨🏰',hi:['Bonjour','fr-FR','봉주르'],
+  facts:['에펠탑은 밤마다 반짝반짝 빛나요.','아침에 크루아상과 바게트 빵을 먹어요.','루브르 박물관에는 모나리자 그림이 있어요.','비행기로 13시간쯤 걸리는 먼 곳이에요.']},
+ {id:'newyork',nm:'뉴욕',ct:'미국',fl:'🇺🇸',code:'JFK',tz:'America/New_York',secs:60,pics:'🗽🚕🍔🏙️',hi:['Hello','en-US','헬로'],
+  facts:['자유의 여신상이 횃불을 들고 서 있어요.','노란 택시가 아주 많아요.','하늘에 닿을 듯한 높은 빌딩이 많아요.','서울이 낮이면 뉴욕은 밤이에요!']},
+ {id:'sydney',nm:'시드니',ct:'호주',fl:'🇦🇺',code:'SYD',tz:'Australia/Sydney',secs:50,pics:'🦘🐨🏖️🎶',hi:["G'day",'en-AU','그다이'],
+  facts:['조개껍데기 모양의 오페라 하우스가 있어요.','캥거루와 코알라가 사는 나라예요.','우리나라가 겨울일 때 호주는 여름이에요.','바다와 해변이 아주 예뻐요.']},
+];
+let loop=null;
+function stopLoop(){if(loop)cancelAnimationFrame(loop);loop=null}
+
+function drawPlane(g,x,y,pitch,gear,scale=1){
+  g.save();g.translate(x,y);g.rotate(-pitch);g.scale(scale,scale);g.lineJoin='round';g.lineWidth=2.5;g.strokeStyle='#14171D';
+  g.fillStyle='#2F6FD6';g.beginPath();g.moveTo(-46,-4);g.lineTo(-58,-30);g.lineTo(-44,-30);g.lineTo(-26,-6);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#fff';g.beginPath();g.moveTo(-56,-6);g.quadraticCurveTo(-58,8,-44,9);g.lineTo(40,9);g.quadraticCurveTo(62,8,64,0);g.quadraticCurveTo(60,-11,40,-11);g.lineTo(-44,-11);g.quadraticCurveTo(-56,-11,-56,-6);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#FFC72C';g.fillRect(-44,1,84,4);
+  g.fillStyle='#9ED3F5';for(let i=-32;i<36;i+=9){g.beginPath();g.arc(i,-4,2.4,0,7);g.fill()}
+  g.beginPath();g.moveTo(46,-8);g.lineTo(56,-8);g.lineTo(60,-3);g.lineTo(46,-3);g.closePath();g.fillStyle='#14171D';g.fill();
+  g.fillStyle='#14171D';g.font='700 8px Hada,sans-serif';g.fillText('세윤항공',-40,-1);
+  g.fillStyle='#C9CED8';g.beginPath();g.moveTo(-6,2);g.lineTo(18,2);g.lineTo(0,20);g.lineTo(-14,20);g.closePath();g.fill();g.stroke();
+  if(gear){g.fillStyle='#14171D';g.fillRect(-2,9,3,8);g.fillRect(36,9,3,8);g.beginPath();g.arc(0,19,3.5,0,7);g.arc(37,19,3.5,0,7);g.fill()}
+  g.restore();
+}
+function cloud(g,x,y,s,dark){g.fillStyle=dark?'#7D8699':'#fff';g.beginPath();g.arc(x,y,16*s,0,7);g.arc(x+18*s,y-8*s,20*s,0,7);g.arc(x+40*s,y,16*s,0,7);g.arc(x+20*s,y+4*s,18*s,0,7);g.fill()}
+
+function startFlight(mode,dest){
+  stopLoop();
+  W=app.clientWidth<560?500:800; // 휴대폰에서는 화면을 좁게 잡아 비행기를 크게 보여 준다
+  const isTrip=mode==='trip';
+  app.innerHTML=`${topbar(mode==='takeoff'?'이륙 연습':mode==='landing'?'착륙 연습':`${dest.fl} ${dest.nm}로 출발!`,isTrip?'trip':'runway')}
+  <div class="stage2" id="stage"><canvas id="cv" width="${W}" height="${H}"></canvas>
+    <div class="hud"><div class="hudbox" id="hudL"></div><div class="hudbox" id="hudR"></div></div><div class="msg" id="msg" hidden></div></div>
+  <div class="ctrls" id="ctrls"></div><p class="helptxt" id="help"></p>`;
+  const cv=$('#cv'),g=cv.getContext('2d'),hudL=$('#hudL'),hudR=$('#hudR'),msg=$('#msg'),ctrls=$('#ctrls'),help=$('#help');
+  const keys={};let phase=mode==='landing'?'landing':'takeoff';
+  // 상태
+  const P={x:60,alt:0,v:0,vy:0,pitch:0,gear:true};
+  const RW={s:0,e:1800};let t=0,stars=0,objs=[],shake=0,target=200,clouds=[...Array(9)].map((_,i)=>({x:i*260+Math.random()*120,y:40+Math.random()*170,s:.6+Math.random()*.7}));
+  if(phase==='landing'){P.x=0;P.alt=222;P.v=170;P.vy=-20;P.pitch=-.03;RW.s=1850;RW.e=2850}
+  function setCtrls(list){ctrls.innerHTML=list.map(([k,label,sub,alt])=>`<button class="ctrl${alt?' alt':''}" data-k="${k}">${label}<small>${sub}</small></button>`).join('');
+    $$('.ctrl',ctrls).forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();keys[k]=true;b.classList.add('held')},off=()=>{keys[k]=false;b.classList.remove('held')};
+      b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off);b.addEventListener('contextmenu',e=>e.preventDefault())})}
+  if(phase==='takeoff'){setCtrls([['thr','🔥 출력','꾹 누르고 있기'],['up','⬆ 기수 올리기','속도가 초록이 되면',1]]);help.textContent='출력을 꾹 눌러 속도를 올리고, 속도 막대가 초록 칸에 닿으면 기수를 올려요. 키보드는 스페이스(출력), 위쪽 화살표(기수).'}
+  else{setCtrls([['up','⬆ 올라가기','살짝 위로',1],['down','⬇ 내려가기','살짝 아래로']]);help.textContent='활주로 옆 불빛을 봐요. 하얀 불 2개, 빨간 불 2개면 딱 좋은 길이에요! 하얀 불이 많으면 너무 높고, 빨간 불이 많으면 너무 낮아요.'}
+  const kd=e=>{if(e.code==='Space'){keys.thr=true;e.preventDefault()}if(e.code==='ArrowUp'){keys.up=true;e.preventDefault()}if(e.code==='ArrowDown'){keys.down=true;e.preventDefault()}};
+  const ku=e=>{if(e.code==='Space')keys.thr=false;if(e.code==='ArrowUp')keys.up=false;if(e.code==='ArrowDown')keys.down=false};
+  addEventListener('keydown',kd);addEventListener('keyup',ku);
+  // 여행 중에는 화면을 끌어서 높이를 바꾼다
+  cv.addEventListener('pointerdown',e=>{if(phase==='cruise'){const r=cv.getBoundingClientRect();target=GY-((e.clientY-r.top)/r.height*H)}});
+  cv.addEventListener('pointermove',e=>{if(phase==='cruise'&&e.buttons){const r=cv.getBoundingClientRect();target=GY-((e.clientY-r.top)/r.height*H)}});
+  function show(title,text,btns){msg.hidden=false;msg.innerHTML=`<div class="box"><h3>${title}</h3><p>${text}</p><div class="row" style="justify-content:center">${btns.map(([id,l,p])=>`<button class="btn${p?' primary':''}" id="${id}">${l}</button>`).join('')}</div></div>`}
+  function finish(){stopLoop();removeEventListener('keydown',kd);removeEventListener('keyup',ku)}
+  const VR=190,VMAX=300;
+  function step(dt){
+    t+=dt;
+    if(phase==='takeoff'){
+      if(keys.thr)P.v=Math.min(VMAX,P.v+75*dt);else P.v=Math.max(0,P.v-(P.alt>0?0:25)*dt);
+      if(keys.up&&P.v>=VR){P.pitch=Math.min(.24,P.pitch+.5*dt)}else if(P.alt<=0){P.pitch=Math.max(0,P.pitch-.6*dt);if(keys.up&&P.v<VR&&P.v>40)P.pitch=.03*Math.sin(t*20)}
+      else P.pitch=Math.max(.1,P.pitch-.15*dt);
+      if(P.alt>0||(P.pitch>.08&&P.v>=VR)){P.vy=P.v*Math.sin(P.pitch)*.9-(P.v<VR?60:0);P.alt=Math.max(0,P.alt+P.vy*dt)}
+      P.x+=P.v*dt;
+      if(P.alt<=0&&P.x>RW.e-60){finish();show('활주로가 끝났어요!','조금 더 일찍 출력을 올리고, 초록 칸에서 기수를 올려 봐요.',[['again','다시 하기',1]]);$('#again').onclick=()=>startFlight(mode,dest);return}
+      if(P.alt>40)P.gear=false;
+      if(P.alt>150){
+        if(isTrip){phase='cruise';P.v=280;setCtrls([['up','⬆ 위로','꾹',1],['down','⬇ 아래로','꾹']]);help.textContent='별을 모으고 먹구름은 피해요! 화면을 손가락으로 끌어도 높이가 바뀌어요.';target=P.alt;say('이륙 성공! '+dest.nm+'로 출발해요');}
+        else{finish();say('이륙 성공!');show('🛫 이륙 성공!','세윤 기장님, 멋지게 날아올랐어요!',[['again','다시 하기'],['land','착륙도 해 볼래',1]]);$('#again').onclick=()=>startFlight('takeoff');$('#land').onclick=()=>startFlight('landing');return}
+      }
+    }else if(phase==='cruise'){
+      if(keys.up)target=Math.min(330,target+180*dt);if(keys.down)target=Math.max(60,target-180*dt);
+      P.alt+=(target-P.alt)*Math.min(1,3*dt);P.pitch=Math.max(-.25,Math.min(.25,(target-P.alt)/300));P.x+=P.v*dt;
+      if(Math.random()<dt*1.4)objs.push({k:Math.random()<.68?'star':'storm',x:P.x+W,alt:70+Math.random()*250,got:false});
+      for(const o of objs){if(o.got)continue;const dx=o.x-P.x,dy=o.alt-P.alt;
+        if(Math.abs(dx)<44&&Math.abs(dy)<(o.k==='star'?30:34)){o.got=true;if(o.k==='star'){stars++;}else{shake=.6}}}
+      objs=objs.filter(o=>o.x>P.x-300);
+      if(t>=dest.secs+6){phase='arrive';P.x=0;P.alt=180;P.v=170;P.vy=-30;RW.s=900;RW.e=1900;objs=[];P.gear=true;setCtrls([]);help.textContent=dest.nm+' 공항에 내리는 중이에요…'}
+    }else if(phase==='arrive'){
+      P.x+=P.v*dt;const ideal=Math.max(0,(RW.s+100-P.x)*.18);P.alt+=(ideal-P.alt)*Math.min(1,2*dt);P.pitch=-.05;
+      if(P.alt<1.5&&P.x>RW.s){P.alt=0;P.pitch=0;P.v=Math.max(0,P.v-120*dt);if(P.v===0){finish();arrival(dest,stars);return}}
+    }else if(phase==='landing'){
+      if(keys.up)P.vy=Math.min(25,P.vy+45*dt);if(keys.down)P.vy=Math.max(-95,P.vy-45*dt);
+      P.alt+=P.vy*dt;P.x+=P.v*dt;P.pitch=P.vy/500;
+      if(P.alt<=0){P.alt=0;
+        if(P.x<RW.s){finish();show('풀밭에 내렸어요!','활주로까지 조금 더 날아가야 해요. 빨간 불이 많으면 위로 올려요.',[['again','다시 하기',1]])}
+        else if(P.x>RW.e-250){finish();show('활주로를 지나쳤어요!','하얀 불이 많으면 너무 높아요. 조금 더 일찍 내려가요.',[['again','다시 하기',1]])}
+        else if(P.vy<-55){finish();show('쿵! 조금 세게 내렸어요','땅에 가까워지면 ⬆ 를 살짝 눌러서 사뿐히 내려요.',[['again','다시 하기',1]])}
+        else{phase='rollout';P.vy=0;say('착륙 성공!')}
+        if(phase!=='rollout'){$('#again').onclick=()=>startFlight('landing');return}
+      }
+      if(P.x>RW.e+200){finish();show('활주로를 지나쳤어요!','하얀 불이 많으면 너무 높아요. 조금 더 일찍 내려가요.',[['again','다시 하기',1]]);$('#again').onclick=()=>startFlight('landing');return}
+    }else if(phase==='rollout'){
+      P.x+=P.v*dt;P.v=Math.max(0,P.v-110*dt);P.pitch=0;
+      if(P.v===0){finish();show('🛬 사뿐 착륙 성공!','세윤 기장님, 승객 모두 안전하게 도착했어요!',[['again','다시 하기'],['to','이륙도 해 볼래',1]]);$('#again').onclick=()=>startFlight('landing');$('#to').onclick=()=>startFlight('takeoff');return}
+    }
+    if(shake>0)shake=Math.max(0,shake-dt);
+  }
+  function papi(){const ideal=Math.max(0,(RW.s+50-P.x)*.12);const d=P.alt-ideal;return Math.max(0,Math.min(4,Math.round(2+d/14)))}
+  function render(){
+    const camX=P.x-230,py=GY-P.alt-12;
+    const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#7FC1FF');sky.addColorStop(1,'#DDF1FF');g.fillStyle=sky;g.fillRect(0,0,W,H);
+    g.save();if(shake>0)g.translate((Math.random()-.5)*8,(Math.random()-.5)*8);
+    for(const c of clouds){const sx=((c.x-camX*.3)%(W+300)+W+300)%(W+300)-150;cloud(g,sx,c.y,c.s)}
+    // 땅·바다
+    const sea=phase==='cruise';
+    g.fillStyle=sea?'#3F8FD8':'#8CCB6A';g.fillRect(0,GY,W,H-GY);
+    if(sea){g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=2;for(let i=0;i<8;i++){const x=((i*130-camX*1.0)%(W+130)+W+130)%(W+130)-60;g.beginPath();g.arc(x,GY+30+i%3*18,10,Math.PI*1.1,Math.PI*1.9);g.stroke()}}
+    else{
+      const rs=RW.s-camX,re=RW.e-camX;g.fillStyle='#4A4F59';g.fillRect(rs,GY-4,re-rs,24);
+      g.fillStyle='#fff';for(let x=rs+60;x<re-40;x+=60)g.fillRect(x,GY+6,30,3);
+      for(let i=0;i<6;i++){g.fillRect(rs+8,GY-2+i*4,30,2);g.fillRect(re-38,GY-2+i*4,30,2)}
+      g.font='700 16px Hada,sans-serif';g.fillText('33',rs+44,GY+16);
+      // 관제탑
+      const tx=(phase==='takeoff'?300:RW.s+300)-camX;g.fillStyle='#E9EDF3';g.strokeStyle='#14171D';g.lineWidth=2.5;g.fillRect(tx,GY-110,22,110);g.strokeRect(tx,GY-110,22,110);
+      g.fillStyle='#9ED3F5';g.fillRect(tx-12,GY-140,46,30);g.strokeRect(tx-12,GY-140,46,30);g.fillStyle='#14171D';g.fillRect(tx-16,GY-146,54,7);
+      // 착륙 안내등
+      if(phase==='landing'||phase==='rollout'){const n=papi(),lx=RW.s-camX-70;for(let i=0;i<4;i++){g.beginPath();g.arc(lx+i*14,GY-8,5,0,7);g.fillStyle=i<n?'#fff':'#E5322D';g.fill();g.strokeStyle='#14171D';g.lineWidth=1.5;g.stroke()}}
+    }
+    if(phase==='arrive'){g.font='700 22px Hada,sans-serif';g.fillStyle='#14171D';g.fillText(`${dest.fl} ${dest.nm} ${dest.code}`,RW.s-camX+20,GY-40)}
+    // 여행 물건
+    for(const o of objs){if(o.got)continue;const sx=o.x-camX,sy=GY-o.alt;if(o.k==='star'){g.font='34px serif';g.fillText('⭐',sx-17,sy+12)}else{cloud(g,sx-30,sy,1,true);g.font='22px serif';g.fillText('⚡',sx-6,sy+24)}}
+    if(phase==='cruise'){g.fillStyle='rgba(255,255,255,.7)';for(let i=1;i<8;i++){g.beginPath();g.arc(230-60-i*16,py+2+Math.sin(t*6+i)*1.5,3.5-i*.35,0,7);g.fill()}}
+    drawPlane(g,230,py,P.pitch,P.gear);
+    g.restore();
+    // 계기판
+    if(phase==='takeoff'){hudL.innerHTML=`속도 <span class="v">${Math.round(P.v)}</span><div class="gauge"><u style="left:${VR/VMAX*100}%;right:0"></u><i style="width:${P.v/VMAX*100}%"></i></div>`;hudR.innerHTML=`높이 <span class="v">${Math.round(P.alt)}</span>`}
+    else if(phase==='cruise'||phase==='arrive'){const pr=Math.min(1,t/(dest.secs+6));hudL.innerHTML=`ICN ✈ ${dest.code}<div class="prog"><i style="width:${pr*100}%"></i></div>`;hudR.innerHTML=`⭐ <span class="v">${stars}</span>`}
+    else{const n=papi();hudL.innerHTML=`착륙 안내등<div class="papi">${[0,1,2,3].map(i=>`<i class="${i<n?'w':'r'}"></i>`).join('')}</div>`;hudR.innerHTML=`높이 <span class="v">${Math.round(P.alt)}</span> · 내려가는 빠르기 <span class="v">${Math.max(0,Math.round(-P.vy))}</span>`}
+  }
+  let last=performance.now();
+  const frame=now=>{if(!cv.isConnected){finish();return}let dt=Math.min(.5,(now-last)/1000);last=now;while(dt>0&&loop!==null){const s=Math.min(.03,dt);step(s);dt-=s}if(loop===null)return;render();if(loop!==null)loop=requestAnimationFrame(frame)};
+  loop=requestAnimationFrame(frame);render();
+}
+
+/* ---------- 도착: 엽서와 여권 도장 ---------- */
+function passport(){try{return JSON.parse(ls.get('sy-passport'))||[]}catch(e){return[]}}
+function stampHtml(s){return `<div class="stamp"><small>ARRIVED</small><b>${s.code}</b><small>${s.nm} ${s.date}</small></div>`}
+function arrival(d,stars){
+  const now=new Date(),date=`${now.getMonth()+1}.${now.getDate()}`;const pp=passport();pp.unshift({code:d.code,nm:d.nm,date});ls.set('sy-passport',JSON.stringify(pp.slice(0,60)));
+  const p=partsIn(d.tz);
+  app.innerHTML=`${topbar(d.fl+' '+d.nm+' 도착!','trip')}
+  <div class="card"><h3>그림엽서</h3><div class="postcard"><div>
+    <div class="pics">${d.pics}</div>
+    <p style="font-size:19px;margin:8px 0 0">${d.ct} <b>${d.nm}</b>에 도착했어요! 모은 별 ⭐ <b>${stars}</b>개</p>
+    <ul>${d.facts.map(f=>`<li>${f}</li>`).join('')}</ul></div>${stampHtml({code:d.code,nm:d.nm,date})}</div></div>
+  <div class="card"><h3>${d.nm}는 지금 몇 시?</h3><div class="city">${anaClock(p)}<div><div class="dg">${hm(p)}</div><div class="diff">${diffText({id:d.id,tz:d.tz})}</div></div></div></div>
+  <div class="card"><h3>${d.ct} 말로 인사해요</h3><button class="btn primary" id="hiBtn">🔊 <span class="greet">${d.hi[2]}</span></button></div>
+  <div class="row"><button class="btn primary" id="again">다른 나라 가기</button><button class="btn" id="pp">내 여권 보기</button></div>`;
+  say(d.nm+'에 도착했어요!');
+  $('#hiBtn').onclick=()=>say(d.hi[0],d.hi[1],.8);$('#again').onclick=()=>go('trip');$('#pp').onclick=()=>go('passport');
+}
+
+/* ---------- 화면 ---------- */
+function topbar(title,back){return `<div class="gtop">${back?`<button data-back="${back}">← 뒤로</button>`:'<a href="/">← 우리집</a>'}<h1>${title}</h1></div>`}
+app.addEventListener('click',e=>{const b=e.target.closest('[data-back]');if(b)go(b.dataset.back)});
+function renderHub(){
+  app.innerHTML=`${topbar('놀이터')}
+  <div class="hub">
+    <button class="gcard" data-go="map"><span class="art" style="background:#9ED3F5">🌍</span><b>세계 시계 지도</b><span>미국은 지금 몇 시? 프랑스는? 낮인 나라, 밤인 나라를 찾아봐요.</span></button>
+    <button class="gcard" data-go="runway"><span class="art" style="background:#14171D">🛫</span><b>활주로 이착륙</b><span>세윤 기장님, 이륙하고 사뿐히 착륙해 봐요.</span></button>
+    <button class="gcard" data-go="trip"><span class="art" style="background:#FFC72C">✈️</span><b>세윤항공 여행</b><span>인천에서 이륙해 도쿄, 파리, 뉴욕, 시드니로 날아가요.</span></button>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>내 여권</h3>${passport().length?`<div class="passport">${passport().slice(0,8).map(stampHtml).join('')}</div>`:'<p class="empty">여행을 다녀오면 도장이 찍혀요.</p>'}</div>`;
+  $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+}
+function renderRunway(){
+  app.innerHTML=`${topbar('활주로 이착륙','hub')}
+  <div class="hub"><button class="gcard" data-m="takeoff"><span class="art" style="background:#9ED3F5">🛫</span><b>이륙하기</b><span>출력을 올려 속도를 내고, 초록 칸에서 기수를 올려요.</span></button>
+  <button class="gcard" data-m="landing"><span class="art" style="background:#14171D">🛬</span><b>착륙하기</b><span>하얀 불 2개, 빨간 불 2개를 맞추며 활주로에 내려요.</span></button></div>`;
+  $$('[data-m]').forEach(b=>b.onclick=()=>startFlight(b.dataset.m));
+}
+function renderTrip(){
+  app.innerHTML=`${topbar('세윤항공 여행','hub')}
+  <div class="card"><h3>어디로 갈까요?</h3><div class="dests">${DESTS.map(d=>`<button data-d="${d.id}"><span class="f">${d.fl}</span><b>${d.nm}</b><span>${d.ct} · ${d.code}</span></button>`).join('')}</div>
+  <p class="helptxt">인천공항(ICN)에서 직접 이륙해서 출발해요. 먼 나라일수록 오래 날아가요.</p></div>`;
+  $$('[data-d]').forEach(b=>b.onclick=()=>startFlight('trip',DESTS.find(d=>d.id===b.dataset.d)));
+}
+function renderPassport(){
+  const pp=passport();
+  app.innerHTML=`${topbar('내 여권','hub')}<div class="card"><h3>찍힌 도장 ${pp.length}개</h3>${pp.length?`<div class="passport">${pp.map(stampHtml).join('')}</div>`:'<p class="empty">아직 도장이 없어요.</p>'}</div>`;
+}
+function go(v){stopLoop();clearInterval(mapTimer);try{speechSynthesis.cancel()}catch(e){}
+  ({hub:renderHub,map:renderMap,runway:renderRunway,trip:renderTrip,passport:renderPassport})[v]();window.scrollTo(0,0)}
+{const h=location.hash.slice(1);go(['map','runway','trip','passport'].includes(h)?h:'hub')}
+try{localStorage.setItem('hb-tab','play')}catch(e){} // 우리집으로 돌아가면 놀이 탭이 열린다
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+/* 우리집 보드와 공부방이 함께 쓰는 글꼴과 포도송이 스티커판 */
+@font-face{font-family:"Hada";src:url(/fonts/HadaCondensed-Regular.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Hada";src:url(/fonts/HadaCondensed-Bold.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"Kkakdugi";src:url(/fonts/KkakdugiDrafting-Bold.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"SeoulAlrim";src:url(/fonts/SeoulAlrim-Bold.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:"YaongEomma";src:url(/fonts/YaongEomma.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Neujot";src:url(/fonts/Neujot-Bold.woff2) format("woff2");font-weight:400;font-display:swap}
+:root{
+  --f-head:"Neujot","Hada","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-display:"Kkakdugi","Hada","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"Hada","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-hand:"YaongEomma","Hada","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-letter:"SeoulAlrim","Hada","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --grape:#7B3FB8; --grape-soft:#EEE3FA; --grape-empty:#FFFFFF; --leaf:#3E9B4F; --stem:#7A5230;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--grape:#B48AF0;--grape-soft:#2B2142;--grape-empty:#1A2335;--leaf:#5BC46D;--stem:#B08358}}
+
+.grapes{display:block;width:100%;max-width:420px;margin:0 auto;height:auto}
+.grapes .g{fill:var(--grape-empty);stroke:var(--grape);stroke-width:2.5;stroke-dasharray:5 4}
+.grapes .g.on{fill:var(--grape);stroke-dasharray:none}
+.grapes .g.new{animation:grapePop .7s ease-out}
+.grapes text{font-family:var(--f-body);font-size:15px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.grapes .leaf{fill:var(--leaf)}
+.grapes .stem{stroke:var(--stem);stroke-width:7;stroke-linecap:round;fill:none}
+@keyframes grapePop{0%{transform:scale(.2);transform-origin:center;transform-box:fill-box}70%{transform:scale(1.25);transform-box:fill-box;transform-origin:center}100%{transform:scale(1);transform-box:fill-box;transform-origin:center}}
+.today4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+.today4 div{border:2px dashed var(--line);border-radius:14px;padding:8px 2px;font-size:14px;color:var(--muted)}
+.today4 div b{display:block;font-family:var(--f-display);font-weight:400;font-size:24px;color:var(--muted)}
+.today4 div.got{border:2px solid var(--grape);background:var(--grape-soft);color:var(--grape)}
+.today4 div.got b{color:var(--grape)}
+.giftline{text-align:center;font-family:var(--f-display);font-size:22px;margin:6px 0 0}
+.giftline small{display:block;font-family:var(--f-body);font-size:15px;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){.grapes .g.new{animation:none}}
+
+/* 손글씨: 쪽지, 아이 인사, 채점 칭찬 */
+.note p,.kidhi,.end>p,.hand{font-family:var(--f-hand);font-size:1.15em}
