@@ -127,6 +127,12 @@ main.wrap{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
 .stick-track.grab .yoke{filter:brightness(1.2)}
 .cp-hint{grid-column:1/-1;text-align:center;font-size:14px;color:#C9D1E0;min-height:1.3em;margin-top:2px}
 .cp-hint b{color:#FFC72C}
+/* 조종석: 실제 계기판처럼 (무광 패널·나사·유리 반사) */
+.cockpit{background:radial-gradient(circle at 12px 12px,#9AA1AC 0 1.5px,#3A3F48 2.5px 3.5px,transparent 4px),radial-gradient(circle at calc(100% - 12px) 12px,#9AA1AC 0 1.5px,#3A3F48 2.5px 3.5px,transparent 4px),radial-gradient(130% 90% at 50% -10%,#3B414D 0%,#22262E 55%,#15181D 100%);box-shadow:var(--shadow),inset 0 2px 0 rgba(255,255,255,.08),inset 0 -6px 14px rgba(0,0,0,.45)}
+.cp-box,.rot{box-shadow:inset 0 2px 6px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.06)}
+.cp-box{background:linear-gradient(#0B0D11,#151820)}
+.dial{filter:drop-shadow(0 2px 3px rgba(0,0,0,.5))}
+.thr-track,.stick-track{box-shadow:inset 0 3px 10px rgba(0,0,0,.65),0 1px 0 rgba(255,255,255,.06)}
 @media (max-width:370px){.cockpit{grid-template-columns:84px 1fr 92px;gap:6px}.thr-track{width:58px}.stick-track{width:86px}}
 .kbdhelp{color:var(--muted);font-size:13px;margin:8px 2px 0}
 
@@ -477,7 +483,28 @@ const BG=(()=>{const R=(s=>()=>{s=(s*16807)%2147483647;return s/2147483647})(7);
   return{hills,city,trees,stars,clouds}})();
 function cloud(g,x,y,s,dark){g.fillStyle=dark?'#6E778A':'rgba(255,255,255,.95)';g.beginPath();g.arc(x,y,16*s,0,7);g.arc(x+18*s,y-9*s,20*s,0,7);g.arc(x+40*s,y,16*s,0,7);g.arc(x+20*s,y+5*s,18*s,0,7);g.fill();
   if(!dark){g.fillStyle='rgba(180,205,235,.35)';g.beginPath();g.ellipse(x+20*s,y+12*s,30*s,7*s,0,0,7);g.fill()}}
+// 사진풍 그림 (public/img/*.webp, 비행 놀이를 열 때만 받음). 못 받으면 아래 그림 그리기 방식으로 그린다.
+const ART=(()=>{const names=['sky-day','sky-night','cruise','airport-day','airport-night','grass-day','grass-night','clouds','storm','plane'];
+  const A={ready:false,img:{}};let p=null;const cache=new Map();
+  A.load=()=>p||=Promise.all(names.map(n=>new Promise(res=>{const i=new Image();i.decoding='async';
+    i.onload=()=>{Promise.resolve(i.decode&&i.decode()).catch(()=>{}).then(()=>{A.img[n]=i;res()})};i.onerror=()=>res();i.src='/img/'+n+'.webp'})))
+    .then(()=>{A.ready=names.every(n=>A.img[n])});
+  // 화면 크기에 맞게 한 번만 줄여 둔 그림 (+좌우 뒤집은 것, +밤 색). 매 프레임 크기를 바꾸지 않아 폰에서도 가볍다.
+  A.fit=(n,h,dpr,night)=>{const i=A.img[n];if(!i)return null;h=Math.round(h);const k=n+'|'+h+'|'+dpr+'|'+(night?1:0);let c=cache.get(k);if(c)return c;
+    const w=Math.round(i.width*h/i.height);
+    const mk=flip=>{const cv=document.createElement('canvas');cv.width=Math.max(1,Math.round(w*dpr));cv.height=Math.max(1,Math.round(h*dpr));const x=cv.getContext('2d');
+      x.imageSmoothingQuality='high';if(flip){x.translate(cv.width,0);x.scale(-1,1)}x.drawImage(i,0,0,cv.width,cv.height);
+      if(night){x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-atop';x.fillStyle='rgba(18,26,58,.55)';x.fillRect(0,0,cv.width,cv.height)}
+      if(n==='airport-day'){x.setTransform(1,0,0,1,0,0);x.globalCompositeOperation='source-atop';const hz=x.createLinearGradient(0,0,0,cv.height);hz.addColorStop(0,'rgba(215,232,248,0)');hz.addColorStop(1,'rgba(215,232,248,.22)');x.fillStyle=hz;x.fillRect(0,0,cv.width,cv.height)} // 공기 원근
+      return cv};
+    c={w,h,n:mk(false)};c.m=n==='plane'||n==='storm'?c.n:mk(true);if(cache.size>40)cache.clear();cache.set(k,c);return c};
+  // 거의 움직이지 않는 하늘+지평선 안개는 한 장으로 미리 합쳐 둔다 (매 프레임 한 번만 복사)
+  A.bake=(k,w,h,dpr,draw)=>{let c=cache.get(k);if(c)return c;c=document.createElement('canvas');c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);const x=c.getContext('2d');x.scale(dpr,dpr);draw(x);cache.set(k,c);return c};
+  return A})();
+const PLANE_W=190; // 사진 비행기 길이 (화면 좌표)
 function drawPlane(g,x,y,pitch,gear,t,night,flame){
+  const DPRg=Math.min(2,devicePixelRatio||1),c=ART.ready&&ART.fit('plane',PLANE_W*ART.img.plane.height/ART.img.plane.width,DPRg,night);
+  if(c)return drawPlanePhoto(g,x,y,pitch,gear,t,night,flame,c);
   g.save();g.translate(x,y);g.rotate(-pitch);g.lineJoin='round';g.lineWidth=2.2;g.strokeStyle='#14171D';
   // 꼬리 날개
   let gr=g.createLinearGradient(0,-34,0,-4);gr.addColorStop(0,'#1E57B8');gr.addColorStop(1,'#3A86F0');
@@ -504,13 +531,40 @@ function drawPlane(g,x,y,pitch,gear,t,night,flame){
   if(night){g.fillStyle='rgba(255,250,210,.18)';g.beginPath();g.moveTo(66,0);g.lineTo(240,-28);g.lineTo(240,40);g.closePath();g.fill()}
   g.restore();
 }
+// 사진 비행기: 몸통 가운데가 (0,0), 바퀴 바닥이 +23 (예전 그림과 같은 자리라 물리·그림자는 그대로)
+function drawPlanePhoto(g,x,y,pitch,gear,t,night,flame,c){
+  const s=c.w/480; // 원본 그림 480px 기준 좌표 → 화면
+  g.save();g.translate(x,y);g.rotate(-pitch);
+  // 엔진 뒤 뜨거운 공기 (출력이 높을수록)
+  if(flame>0.05){const ex=-95+258*s,ey=(104-80.5)*s,gr=g.createLinearGradient(ex,0,ex-60*flame-10,0);gr.addColorStop(0,`rgba(255,255,255,${.28*flame})`);gr.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=gr;g.beginPath();g.ellipse(ex-30*flame-4,ey+Math.sin(t*30)*.6,34*flame+6,3.2+flame*1.5,0,0,7);g.fill()}
+  // 바퀴 (몸통 뒤에 먼저 그림)
+  if(gear){const leg=(gx,r,n)=>{g.fillStyle=night?'#5A606B':'#9AA1AB';g.fillRect(gx-1.3,5,2.6,19.5-5);g.fillStyle=night?'#3A3F48':'#6C737E';g.fillRect(gx-2.4,15,4.8,2.2);
+      for(let k=0;k<n;k++){const wx=gx+(n>1?(k-.5)*5.2:0);g.fillStyle='#16181C';g.beginPath();g.arc(wx,19.5,r,0,7);g.fill();g.fillStyle=night?'#4A4F57':'#8E949C';g.beginPath();g.arc(wx,19.5,r*.45,0,7);g.fill()}};
+    leg(-4,4,2);leg(78,3.3,1)}
+  g.drawImage(c.n,-c.w/2,-80.5*s,c.w,c.h);
+  // 세윤항공 글씨 (창문 줄 위, 하얀 테두리로 칠한 듯이)
+  g.font='700 8px Hada,sans-serif';g.lineJoin='round';g.lineWidth=2.4;g.strokeStyle=night?'rgba(170,180,205,.9)':'rgba(255,255,255,.95)';
+  const nm=kidName()+'항공';g.strokeText(nm,-34,-1.2);g.fillStyle=night?'#2A3E7A':'#1E4FA8';g.fillText(nm,-34,-1.2);
+  // 밤: 창문 불빛
+  if(night){g.fillStyle='rgba(255,214,120,.85)';for(let i=-64;i<70;i+=5.6){if(i>-38&&i<14)continue;g.fillRect(i,-3.6,1.8,1.6)}}
+  // 항법등: 꼬리 흰 섬광, 몸통 위 빨간 경고등, 날개 끝 빨강
+  if(Math.sin(t*9)>.75){g.fillStyle='#fff';g.shadowColor='#fff';g.shadowBlur=8;g.beginPath();g.arc(-c.w/2+3,-2,2,0,7);g.fill();g.shadowBlur=0}
+  if(Math.sin(t*5+1)>.4){g.fillStyle='rgba(255,60,48,.95)';g.shadowColor='#f33';g.shadowBlur=6;g.beginPath();g.arc(8,-8.6,1.6,0,7);g.fill();g.shadowBlur=0}
+  g.fillStyle='#FF3B30';g.beginPath();g.arc(-95+150*s,(28-80.5)*s,1.4,0,7);g.fill();
+  // 착륙등 (바퀴를 내렸거나 밤일 때)
+  if(night||gear){const lg=g.createRadialGradient(70,6,1,70,6,night?120:40);lg.addColorStop(0,`rgba(255,250,225,${night?.55:.35})`);lg.addColorStop(1,'rgba(255,250,225,0)');
+    g.fillStyle=lg;g.beginPath();g.moveTo(68,6);g.lineTo(night?260:110,-26);g.lineTo(night?260:110,44);g.closePath();g.fill();
+    g.fillStyle='#FFFBE8';g.beginPath();g.arc(70,6,1.6,0,7);g.fill()}
+  g.restore();
+}
 
 function startFlight(mode,opt={}){
   endFlight();
   const isTrip=mode==='trip',dest=opt.dest,lv=opt.level||0,L=(isTrip?LEVELS.takeoff[0]:LEVELS[mode][lv]);
   W=app.clientWidth<600?560:820;H=W<600?400:430;GY=H-70;
   const PX=W<600?175:240;
-  const ac=new AbortController(),sig={signal:ac.signal};
+  const ac=new AbortController(),sig={signal:ac.signal};ART.load();
   const title=mode==='takeoff'?`🛫 이륙 · ${L.n}`:mode==='landing'?`🛬 착륙 · ${L.n}`:`${dest.fl} ${ro(dest.nm)} 출발!`;
   app.innerHTML=`${topbar(title,isTrip?'trip':'runway')}
   <div class="stage2" id="stage"><canvas id="cv"></canvas>
@@ -699,9 +753,29 @@ function startFlight(mode,opt={}){
   const seaG=g.createLinearGradient(0,GY,0,H);seaG.addColorStop(0,'#3F8FD8');seaG.addColorStop(1,'#1F5FA8');
   const groundG=g.createLinearGradient(0,GY,0,H);groundG.addColorStop(0,night?'#1E3A28':'#8CCB6A');groundG.addColorStop(1,night?'#132619':'#5FA347');
   const wrap=(x,span)=>((x%span)+span)%span;
+  const rwG=g.createLinearGradient(0,GY-3,0,GY+19);rwG.addColorStop(0,night?'#2E3138':'#6A6E75');rwG.addColorStop(.18,night?'#24272D':'#45494F');rwG.addColorStop(1,night?'#191B20':'#2E3136');
+  // 사진 띠를 좌우로 이어 그린다 (짝수 칸은 그대로, 홀수 칸은 뒤집어서 이음매가 안 보이게)
+  function band(name,y,h,off){const c=ART.fit(name,h,DPR);if(!c)return;const w=c.w,span=2*w;let x=-wrap(off,span),i=0;
+    for(;x<W;x+=w,i++)if(x+w>0)g.drawImage(i%2?c.m:c.n,x,y,w,h)}
   function render(){
     const camX=P.x-PX,py=GY-P.alt-12,sea=phase==='cruise';
     g.save();if(shake>0&&!reduce)g.translate((Math.random()-.5)*10*shake,(Math.random()-.5)*10*shake);
+    const photo=ART.ready;
+    if(photo){
+      if(sea){band('cruise',-6,H+12,camX*.06)}
+      else{
+        const ah=Math.round(GY*(night?.42:.36)),hy=GY-ah;
+        const sky=ART.bake(`sky|${night}|${W}|${H}|${DPR}`,W,GY+2,DPR,x=>{const im=ART.img[night?'sky-night':'sky-day'],sc=Math.max(W/im.width,(H*.92)/im.height);
+          x.drawImage(im,(W-im.width*sc)/2,-4,im.width*sc,im.height*sc);
+          // 지평선 안개: 하늘 사진과 공항 사진이 자연스럽게 이어지게
+          const hg=x.createLinearGradient(0,hy-50,0,hy+40);hg.addColorStop(0,night?'rgba(20,30,60,0)':'rgba(205,226,246,0)');hg.addColorStop(1,night?'rgba(30,40,70,.5)':'rgba(205,226,246,.92)');
+          x.fillStyle=hg;x.fillRect(0,hy-50,W,GY+2-(hy-50))});
+        g.drawImage(sky,0,0,W,GY+2);
+        if(!night)band('clouds',8,Math.min(hy-8,GY*.52),camX*.1+t*3);
+        band(night?'airport-night':'airport-day',hy+3,ah,camX*.3);
+        band(night?'grass-night':'grass-day',GY-1,H-GY+3,camX);
+      }
+    }else{
     g.fillStyle=night?skyNight:skyDay;g.fillRect(-10,-10,W+20,H+20);
     if(night){for(const s of BG.stars){const a=.5+.5*Math.sin(t*2+s.p);g.fillStyle=`rgba(255,255,255,${.4+.6*a})`;g.fillRect(wrap(s.x-camX*.02,1200)*W/1200,s.y,s.r,s.r)}
       g.fillStyle='#F4F1D0';g.beginPath();g.arc(W-80,60,20,0,7);g.fill();g.fillStyle=night?'#070D24':'#fff';g.beginPath();g.arc(W-72,54,18,0,7);g.fill()}
@@ -716,21 +790,27 @@ function startFlight(mode,opt={}){
     }
     for(const c of BG.clouds)if(c.l===1)cloud(g,wrap(c.x-camX*.45,W+400)-200,c.y,c.s,night);
     g.fillStyle=sea?seaG:groundG;g.fillRect(-10,GY,W+20,H-GY+10);
-    if(sea){g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=2;for(let i=0;i<9;i++){const x=wrap(i*130-camX,W+130)-60;g.beginPath();g.arc(x,GY+26+i%3*16,10,Math.PI*1.1,Math.PI*1.9);g.stroke()}}
+    }
+    if(sea){if(!photo){g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=2;for(let i=0;i<9;i++){const x=wrap(i*130-camX,W+130)-60;g.beginPath();g.arc(x,GY+26+i%3*16,10,Math.PI*1.1,Math.PI*1.9);g.stroke()}}}
     else{
-      for(const tr of BG.trees){const x=wrap(tr.x-camX*.8,1400)-100;if(x<-40||x>W+40)continue;g.fillStyle=night?'#2B1F14':'#7A5230';g.fillRect(x-2,GY-14*tr.s,4,14*tr.s);g.fillStyle=night?'#183A22':'#3E9B4F';g.beginPath();g.arc(x,GY-20*tr.s,11*tr.s,0,7);g.fill()}
+      if(!photo)for(const tr of BG.trees){const x=wrap(tr.x-camX*.8,1400)-100;if(x<-40||x>W+40)continue;g.fillStyle=night?'#2B1F14':'#7A5230';g.fillRect(x-2,GY-14*tr.s,4,14*tr.s);g.fillStyle=night?'#183A22':'#3E9B4F';g.beginPath();g.arc(x,GY-20*tr.s,11*tr.s,0,7);g.fill()}
       const rs=RW.s-camX,re=RW.e-camX;
-      g.fillStyle='#3F444E';g.fillRect(rs,GY-3,re-rs,22);g.fillStyle='#4A505C';g.fillRect(rs,GY-3,re-rs,4);
-      g.fillStyle='#fff';for(let x=rs+70;x<re-50;x+=60)g.fillRect(x,GY+7,30,3);
+      if(photo){g.fillStyle=rwG;g.fillRect(rs,GY-3,re-rs,22);
+        g.fillStyle='rgba(255,255,255,.08)';for(let x=Math.max(rs,-20);x<Math.min(re,W+20);x+=9)g.fillRect(x+((x*7)%5),GY+2+((x*13)%14),2,1);
+        g.fillStyle='rgba(0,0,0,.18)';const tz=aimX()-camX;g.fillRect(tz-20,GY+5,160,2.2);g.fillRect(tz+10,GY+10,120,1.8); // 바퀴 자국
+        g.fillStyle=night?'rgba(255,255,255,.7)':'rgba(255,255,255,.88)';g.fillRect(rs,GY-2.2,re-rs,1.1);g.fillRect(rs,GY+16.4,re-rs,1.1);
+        g.fillStyle=night?'rgba(255,255,255,.75)':'rgba(255,255,255,.9)';for(let x=rs+70;x<re-50;x+=60)g.fillRect(x,GY+7,30,2)}
+      else{g.fillStyle='#3F444E';g.fillRect(rs,GY-3,re-rs,22);g.fillStyle='#4A505C';g.fillRect(rs,GY-3,re-rs,4);
+      g.fillStyle='#fff';for(let x=rs+70;x<re-50;x+=60)g.fillRect(x,GY+7,30,3)}
       for(let i=0;i<5;i++){g.fillRect(rs+8,GY+1+i*3.5,26,2);g.fillRect(re-34,GY+1+i*3.5,26,2)}
       if(mode==='landing'||phase==='arrive'||phase==='rollout'){g.fillStyle='#fff';g.fillRect(aimX()-camX-14,GY+1,28,4);g.fillRect(aimX()-camX-14,GY+12,28,4)}
       g.font='700 15px Hada,sans-serif';g.fillStyle='#fff';g.fillText('33',rs+40,GY+17);
       // 활주로 가장자리 등
       for(let x=rs;x<=re;x+=40){if(x<-10||x>W+10)continue;g.fillStyle=night?'#FFF2B0':'#F5E6A3';if(night){g.globalAlpha=.35;g.beginPath();g.arc(x,GY-2,6,0,7);g.fill();g.globalAlpha=1}g.beginPath();g.arc(x,GY-2,2,0,7);g.fill()}
       // 관제탑
-      const tx=(phase==='takeoff'?300:RW.s+300)-camX;g.fillStyle=night?'#2A3348':'#E9EDF3';g.strokeStyle='#14171D';g.lineWidth=2.5;g.fillRect(tx,GY-110,22,110);g.strokeRect(tx,GY-110,22,110);
+      const tx=(phase==='takeoff'?300:RW.s+300)-camX;if(!photo){g.fillStyle=night?'#2A3348':'#E9EDF3';g.strokeStyle='#14171D';g.lineWidth=2.5;g.fillRect(tx,GY-110,22,110);g.strokeRect(tx,GY-110,22,110);
       g.fillStyle=night?'#FFD86B':'#9ED3F5';g.fillRect(tx-12,GY-140,46,30);g.strokeRect(tx-12,GY-140,46,30);g.fillStyle='#14171D';g.fillRect(tx-16,GY-146,54,7);
-      if(Math.sin(t*4)>0){g.fillStyle='#FF3B30';g.beginPath();g.arc(tx+11,GY-150,3,0,7);g.fill()}
+      if(Math.sin(t*4)>0){g.fillStyle='#FF3B30';g.beginPath();g.arc(tx+11,GY-150,3,0,7);g.fill()}}
       // 바람 자루 (바람 방향과 세기)
       const wx=RW.s-150-camX;if(wx>-30&&wx<W+30){g.strokeStyle='#14171D';g.lineWidth=2;g.beginPath();g.moveTo(wx,GY);g.lineTo(wx,GY-46);g.stroke();
         const ws=(wind?.5+.5*Math.abs(windNow):.25);g.save();g.translate(wx,GY-44);g.rotate((1-ws)*1.1);g.fillStyle='#FF7A2B';g.beginPath();g.moveTo(0,-5);g.lineTo(30,-3);g.lineTo(30,3);g.lineTo(0,5);g.closePath();g.fill();
@@ -740,16 +820,20 @@ function startFlight(mode,opt={}){
     }
     if(phase==='arrive'){g.font='700 22px Hada,sans-serif';g.fillStyle=night?'#fff':'#14171D';g.fillText(`${dest.fl} ${dest.nm} ${dest.code}`,RW.s-camX+20,GY-40)}
     for(const o of objs){if(o.got)continue;const sx=o.x-camX,sy=GY-o.alt;if(o.k==='star'){const b=1+.12*Math.sin(t*6+o.x);g.save();g.translate(sx,sy);g.scale(b,b);g.font='34px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⭐',0,0);g.restore()}
-      else{cloud(g,sx-30,sy,1,true);if(Math.sin(t*10+o.x)>.6){g.font='22px serif';g.fillText('⚡',sx-6,sy+24)}}}
+      else{const sc=photo&&ART.fit('storm',54,DPR);
+        if(sc){g.drawImage(sc.n,sx-10-sc.w/2,sy-sc.h/2-2,sc.w,sc.h);if(Math.sin(t*10+o.x)>.6){g.strokeStyle='rgba(220,240,255,.95)';g.shadowColor='#9cf';g.shadowBlur=10;g.lineWidth=2;g.beginPath();g.moveTo(sx-8,sy+18);g.lineTo(sx-14,sy+30);g.lineTo(sx-6,sy+32);g.lineTo(sx-12,sy+46);g.stroke();g.shadowBlur=0}}
+        else{cloud(g,sx-30,sy,1,true);if(Math.sin(t*10+o.x)>.6){g.font='22px serif';g.fillText('⚡',sx-6,sy+24)}}}}
     // 비행운·엔진 연기
-    if(phase==='cruise'){g.fillStyle='rgba(255,255,255,.7)';for(let i=1;i<9;i++){g.beginPath();g.arc(PX-62-i*15,py+2+Math.sin(t*6+i)*1.5,3.8-i*.35,0,7);g.fill()}}
+    if(phase==='cruise'){if(photo){const x0=PX-60,cg=g.createLinearGradient(x0,0,x0-260,0);cg.addColorStop(0,'rgba(255,255,255,.75)');cg.addColorStop(1,'rgba(255,255,255,0)');
+        g.fillStyle=cg;g.beginPath();g.moveTo(x0,py+7);g.lineTo(x0-260,py+3+Math.sin(t*2)*2);g.lineTo(x0-260,py+15+Math.sin(t*2)*2);g.lineTo(x0,py+10);g.closePath();g.fill()}
+      else{g.fillStyle='rgba(255,255,255,.7)';for(let i=1;i<9;i++){g.beginPath();g.arc(PX-62-i*15,py+2+Math.sin(t*6+i)*1.5,3.8-i*.35,0,7);g.fill()}}}
     for(const p of parts){const a=1-p.life/p.max,sx=p.kind==='conf'?p.x-camX:p.x-camX,sy=p.y;
       if(p.kind==='dust'){g.fillStyle=`rgba(${night?'120,120,130':'190,170,140'},${a*.55})`;g.beginPath();g.arc(sx,sy-4,p.s,0,7);g.fill()}
       else if(p.kind==='spark'){g.fillStyle=`rgba(255,215,80,${a})`;g.fillRect(sx,sy,p.s,p.s)}
       else{g.save();g.translate(sx,sy);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-3,-5,6,10);g.restore()}}
     drawPlane(g,PX,py,P.pitch,P.gear,t,night,phase==='takeoff'||phase==='cruise'?C.thr:0);
     // 그림자
-    if(!sea&&P.alt<120){g.fillStyle=`rgba(0,0,0,${.22*(1-P.alt/120)})`;g.beginPath();g.ellipse(PX+8,GY+4,50*(1-P.alt/240),4,0,0,7);g.fill()}
+    if(!sea&&P.alt<120){g.fillStyle=`rgba(0,0,0,${.22*(1-P.alt/120)})`;g.beginPath();g.ellipse(PX+8,GY+4,(photo?82:50)*(1-P.alt/240),4,0,0,7);g.fill()}
     for(const p of pops){const a=1-p.life/1.1;g.globalAlpha=a;g.font='700 22px Hada,sans-serif';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#14171D';g.strokeText(p.text,p.x,p.y-p.life*40);g.fillStyle=p.color;g.fillText(p.text,p.x,p.y-p.life*40);g.globalAlpha=1;g.textAlign='left'}
     if(night&&!sea){const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.9);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.35)');g.fillStyle=v;g.fillRect(0,0,W,H)}
     g.restore();
