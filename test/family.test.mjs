@@ -132,3 +132,10 @@ test('publicDoc은 PIN 정보를 감춘다', () => {
   const d = fam(); d.pin = { salt: 'a', hash: 'b' }; d.pinFail = { n: 1 };
   const p = publicDoc(d); assert.equal(p.pin, undefined); assert.equal(p.pinFail, undefined); assert.equal(p.hasPin, true);
 });
+
+test('상태: 학교와 유치원은 따로, 모르는 값은 집으로', () => {
+  const doc = newFamily({ members: [{ name: '세윤', role: 'child' }] }); const id = doc.members[0].id;
+  apply(doc, 'setStatus', { id, state: 'school' }); assert.equal(doc.status[id].state, 'school');
+  apply(doc, 'setStatus', { id, state: 'kinder' }); assert.equal(doc.status[id].state, 'kinder');
+  apply(doc, 'setStatus', { id, state: 'moon' }); assert.equal(doc.status[id].state, 'home');
+});

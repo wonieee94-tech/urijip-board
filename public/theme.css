@@ -424,3 +424,30 @@ button.tile:active{transform:translateY(1px);box-shadow:var(--shadow-sm)}
 .dbar .bb{width:70%;height:70px;background:var(--sunk);border:1px solid var(--hair);margin:0;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
 .dbar .bb i{display:block;width:100%;background:var(--star,#E9A821);border-radius:8px 8px 0 0;min-height:2px}
 .dbar .bv{min-height:1.2em;font-weight:700}.dbar small{color:var(--muted);font-size:11px}
+
+/* 떠 있는 시트: 휴대폰은 아래에서 올라오고, 넓은 화면은 가운데 창 */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(10,14,22,.5);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);opacity:0;transition:opacity .18s}
+.sheet.show{opacity:1}
+.sheet-card{background:var(--card);color:var(--ink);width:min(560px,100%);max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px));overflow:auto;overscroll-behavior:contain;
+  border-radius:24px 24px 0 0;box-shadow:var(--shadow);transform:translateY(24px);transition:transform .22s cubic-bezier(.2,.9,.3,1);
+  padding:8px max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
+.sheet.show .sheet-card{transform:none}
+.sheet-grab{display:block;width:44px;height:5px;border-radius:9px;background:var(--hair,#ccd);margin:2px auto 8px}
+.sheet-head{display:flex;align-items:center;gap:8px;position:sticky;top:-8px;background:var(--card);padding:4px 0 8px;z-index:1}
+.sheet-head h3{flex:1;margin:0;font-size:21px}
+.sheet-head .x{border:1px solid var(--hair,#ccd);background:var(--card);border-radius:12px;min-width:40px;min-height:40px;color:var(--muted)}
+.sheet-foot{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom,0px));background:var(--card);padding:10px 0 4px}
+.sheet-foot .btn{flex:1}.sheet-foot .btn.primary{flex:2}
+.sheet-list{background-image:none}
+.sheet-list .item:last-child{border-bottom:0}
+body.sheet-open{overflow:hidden}
+body.sheet-open .toast{z-index:55;pointer-events:none;bottom:auto;top:calc(14px + env(safe-area-inset-top,0px))}
+@media (min-width:700px){.sheet{align-items:center;padding:24px}.sheet-card{border-radius:24px}}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet-card{transition:none}}
+.item .acts{margin-left:auto;display:flex;gap:6px}.item .acts .x{margin-left:0}
+.calhint{color:var(--muted);font-size:14px;margin:10px 2px 0;text-align:center}
+.cardhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}.cardhead h3{flex:1;margin:0}
+.addbtn{width:42px;height:42px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:24px;font-weight:700;line-height:1;display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.fab{position:fixed;z-index:25;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(var(--nav) + 26px + env(safe-area-inset-bottom,0px));
+  width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:30px;font-weight:700;display:grid;place-items:center;box-shadow:var(--shadow)}
+.fab:active,.addbtn:active{transform:scale(.94)}
