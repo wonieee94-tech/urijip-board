@@ -292,6 +292,15 @@ body::before{background:var(--bg)}
 .parent{border:1px dashed var(--hair)}
 .opt.right{border-color:var(--accent)}.opt.wrong{border-color:var(--move)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mark path{stroke-dashoffset:0}}
+/* 오늘 목표·연속 공부·다시 풀기 */
+.today-goal{display:grid;grid-template-columns:auto 1fr;gap:10px;margin:0 0 14px}
+.today-goal>div{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:10px 14px}
+.tg-streak{text-align:center;min-width:92px}.tg-streak b{display:block;font-size:28px;line-height:1.1}.tg-streak small,.tg-goal small{color:var(--muted);font-size:14px}
+.tg-goal b{display:block;font-size:19px}.tg-goal.met{border-color:var(--grape);background:var(--grape-soft)}
+.tg-dots{display:flex;gap:6px;margin:4px 0}.tg-dots i{font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px dashed var(--line);font-size:14px;color:var(--muted)}
+.tg-dots i.on{border:2px solid var(--grape);background:var(--grape);color:#fff}
+.reviewcard{display:block;width:100%;text-align:left;border:2px solid var(--move);background:var(--move-soft);margin:0 0 14px;cursor:pointer;color:var(--ink);font:inherit}
+.reviewcard b{display:block;font-size:20px}.reviewcard b span{color:var(--move)}.reviewcard small{color:var(--muted)}
 </style>
 
 </head>
@@ -301,25 +310,17 @@ body::before{background:var(--bg)}
     <a class="back" id="homeLink" href="/">← 우리집</a>
     <button class="back" id="backBtn" hidden>← 뒤로</button>
     <span class="brand">세윤이 공부방</span>
-    <span class="stars" id="stars" aria-label="모은 별">★ 0</span>
+    <span class="stars" id="stars" aria-label="오늘 모은 별">★ 0</span>
   </header>
   <main id="app"></main>
 </div>
 
 <script src="/grapes.js"></script>
+<script src="/hangul.js"></script>
+<script src="/progress.js"></script>
 <script>
-/* ---------- 한글 조합 도구 ---------- */
-const CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
-const JONG=['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
-function dec(ch){if(!ch)return null;const c=ch.charCodeAt(0)-0xAC00;if(c<0||c>11171)return null;return{cho:Math.floor(c/588),jung:Math.floor(c%588/28),jong:c%28}}
-function comp(cho,jung,jong){return String.fromCharCode(0xAC00+cho*588+jung*28+jong)}
-const MOVE={1:[0,0],2:[0,1],3:[1,10],4:[0,2],5:[4,12],6:[4,-1],7:[0,3],8:[0,5],9:[8,0],10:[8,6],11:[8,7],12:[8,10],13:[8,16],14:[8,17],15:[8,-1],16:[0,6],17:[0,7],18:[17,10],19:[0,9],20:[0,10],22:[0,12],23:[0,14],24:[0,15],25:[0,16],26:[0,17],27:[0,-1]};
-function soundOf(s){const a=[...s];for(let i=0;i<a.length-1;i++){const d=dec(a[i]),n=dec(a[i+1]);
-  if(d&&n&&d.jong&&n.cho===11&&MOVE[d.jong]){const[r,m]=MOVE[d.jong];a[i]=comp(d.cho,d.jung,r);if(m>=0)a[i+1]=comp(m,n.jung,n.jong)}}return a.join('')}
-function movedOf(w){const d=dec(w[w.length-1]);const mv=MOVE[d.jong];return{base:comp(d.cho,d.jung,mv[0]),chip:mv[1]>=0?CHO[mv[1]]:'',d}}
-// 숫자 뒤 조사
-const VOW_END=n=>[2,4,5,9].includes(n%10)&&n%10!==0;
-const eun=n=>VOW_END(n)?'는':'은', eul=n=>VOW_END(n)?'를':'을', rang=n=>VOW_END(n)?'랑':'이랑';
+/* ---------- 한글 조합 도구 (hangul.js) ---------- */
+const {CHO,JONG,dec,comp,MOVE,soundOf,movedOf,VOW_END,eun,eul,rang,ro}=Hangul;
 
 /* ---------- 데이터 ---------- */
 const LINK=[
@@ -397,36 +398,56 @@ function applySkin(k){k=k||'airport';const h=document.documentElement;h.dataset.
 try{applySkin(localStorage.getItem('hb-skin'))}catch(e){applySkin('airport')}
 const CODE=(()=>{try{return localStorage.getItem('hb-code')}catch(e){return null}})();
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-async function server(op,p){const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:CODE,op,p})});const d=await r.json();if(!r.ok)throw new Error(d.error);return d}
+async function server(op,p){const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:CODE,op,p})});const d=await r.json().catch(()=>({error:'서버 응답을 읽지 못했어요'}));if(!r.ok)throw new Error(d.error||'저장하지 못했어요');return d}
 const EMPTY=()=>({board:[],gift:'',history:[]});
 function localSt(){try{return JSON.parse(localStorage.getItem('sy-grapes'))||EMPTY()}catch(e){return EMPTY()}}
 function saveLocal(st){try{localStorage.setItem('sy-grapes',JSON.stringify(st))}catch(e){}}
-async function getStickers(){if(CODE){try{const r=await fetch('/api/family?code='+encodeURIComponent(CODE),{cache:'no-store'});const d=await r.json();if(r.ok){if(d.skin)applySkin(d.skin);return d.stickers||EMPTY()}}catch(e){}}return localSt()}
-async function award(subject){const day=today();const before=await getStickers();
-  const had=before.board.some(x=>x.date===day&&x.subject===subject),full=before.board.length>=Grapes.GOAL;
-  let st=before;
-  if(!had&&!full){if(CODE){try{st=(await server('addSticker',{date:day,subject})).stickers}catch(e){}}
-    else{st.board.push({date:day,subject,at:Date.now()});saveLocal(st)}}
-  return{added:!had&&!full&&st.board.length>before.board.length,had,full,st}}
-const SUBJ_OF={quiz:'han',detective:'han',vgame:'han',add10:'math',sub10:'math',add20:'math',sub20:'math',tquiz:'times',first:'abc',build:'abc'};
+// 가족 코드 없이 쓸 때: 이 기기에만 기록 (서버 lib/family.mjs의 finishRound와 같은 규칙)
+function localData(){let d={};try{d=JSON.parse(localStorage.getItem('sy-local'))||{}}catch(e){}
+  return{study:d.study||{},learn:d.learn||{},review:d.review||{},goal:d.goal||{subjects:2},stickers:localSt()}}
+function saveLocalData(d){try{localStorage.setItem('sy-local',JSON.stringify({study:d.study,learn:d.learn,review:d.review,goal:d.goal}))}catch(e){}saveLocal(d.stickers)}
+const passed=(r,t)=>t>=4&&r>=Math.ceil(t*.75);
+function localFinish(p){const d=localData(),day=p.date;
+  d.study[day]=(d.study[day]||0)+p.stars;
+  const L=(d.learn[day]||={});for(const[k,[r,t]]of Object.entries(p.tally)){const x=(L[k]||={r:0,t:0,n:0});x.r+=r;x.t+=t;x.n++}
+  for(const m of p.missed){const e=((d.review[m.kind]||={})[m.key]||={n:0,t:0,at:Date.now()});e.n=Math.min(3,e.n+1);e.t++;e.at=Date.now()}
+  for(const m of p.fixed){const e=d.review[m.kind]?.[m.key];if(e)e.n=Math.max(0,e.n-1)}
+  let award='none';const st=d.stickers;
+  if(p.subject&&!p.review){if(!passed(p.right,p.total))award='low';else if(st.board.some(x=>x.date===day&&x.subject===p.subject))award='had';
+    else if(st.board.length>=Grapes.GOAL)award='full';else{st.board.push({date:day,subject:p.subject,at:Date.now()});award='added'}}
+  d.lastRound={id:p.roundId,award};saveLocalData(d);return d}
+// 지금 기록 (서버 또는 이 기기)
+let DOC=null;
+async function getDoc(){if(CODE){try{const r=await fetch('/api/family?code='+encodeURIComponent(CODE),{cache:'no-store'});const d=await r.json();if(r.ok){if(d.skin)applySkin(d.skin);DOC=d;showStars();return d}}catch(e){}
+  if(DOC)return DOC}DOC=localData();showStars();return DOC}
+async function getStickers(){return (await getDoc()).stickers||EMPTY()}
+const roundId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+// 한 판 결과를 한 번에 저장한다. 실패하면 {error}를 돌려주고, 같은 roundId로 다시 보내도 한 번만 센다
+async function saveRound(p){
+  if(!CODE){DOC=localFinish(p);showStars();return{doc:DOC,award:DOC.lastRound.award}}
+  try{const d=await server('finishRound',p);DOC=d;if(d.skin)applySkin(d.skin);showStars();
+    return{doc:d,award:d.lastRound?.id===p.roundId?d.lastRound.award:(p.subject&&!p.review?'had':'none')}}
+  catch(e){return{error:e.message||'저장하지 못했어요'}}}
+const isWaiting=(kind,key)=>(DOC?.review?.[kind]?.[key]?.n||0)>0;
+const SUBJ_OF=Progress.SUBJ_OF;
 const MARK_O='<svg viewBox="0 0 200 200"><path d="M104 24 C 152 22, 182 62, 177 104 C 172 150, 134 180, 94 177 C 50 174, 20 138, 25 96 C 30 56, 64 26, 118 32"/></svg>';
 const MARK_X='<svg viewBox="0 0 200 200"><path d="M46 168 L 160 32"/></svg>';
 function mark(el,ok){const m=document.createElement('div');m.className='mark';m.innerHTML=ok?MARK_O:MARK_X;el.appendChild(m)}
-let stars=0;
-try{stars=+localStorage.getItem('sy-stars')||0}catch(e){}
-function showStars(p){const el=$('#stars');el.textContent='★ '+stars;if(p){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}}
-function addStar(){stars++;try{localStorage.setItem('sy-stars',stars)}catch(e){}showStars(true);if(CODE)server('addStars',{date:today(),n:1}).catch(()=>{})}
-showStars();
+let pending=0; // 아직 저장하지 않은 이번 판 별
+function showStars(p){const el=$('#stars');const n=(DOC?.study?.[today()]||0)+pending;el.textContent='★ '+n;el.title='오늘 모은 별';if(p){el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop')}}
+function addStar(){pending++;showStars(true)}
+showStars();getDoc();
 
 /* ---------- 화면 이동 ---------- */
-const PARENT={grapes:'home',hangul:'home',math:'home',times:'home',phonics:'home',
+const PARENT={review:'home',grapes:'home',hangul:'home',math:'home',times:'home',phonics:'home',
   story:'hangul',vowel:'hangul',write:'hangul',quiz:'hangul',detective:'hangul',vgame:'hangul',
   add10:'math',sub10:'math',add20:'math',sub20:'math',tquiz:'times',abc:'phonics',first:'phonics',build:'phonics'};
 let CUR='home';
 const VIEWS={grapes:renderGrapes,home:renderHome,hangul:renderHangul,story:renderStory,vowel:renderVowel,write:renderWrite,math:renderMath,times:()=>renderTimes(),phonics:renderPhonics,abc:renderAbc};
 function go(v){try{speechSynthesis.cancel()}catch(e){}
+  if(CUR==='write'&&v!=='write')flushWrite();
   CUR=v;$('#backBtn').hidden=v==='home';$('#homeLink').hidden=v!=='home';
-  if(GAMES[v])startGame(v);else VIEWS[v]();
+  if(v==='review')startReview();else if(GAMES[v])startGame(v);else VIEWS[v]();
   window.scrollTo(0,0)}
 $('#backBtn').onclick=()=>go(PARENT[CUR]||'home');
 app.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)go(g.dataset.go)});
@@ -436,6 +457,8 @@ const card=(go,cls,glyph,title,sub,gcls='')=>`<button class="mcard ${cls}" data-
 function renderHome(){
   app.innerHTML=`
   <section class="hello"><p class="eyebrow">오늘의 공부 놀이</p><h1>세윤아, 뭐부터 해 볼까?</h1></section>
+  <div class="today-goal" id="todayGoal" aria-live="polite"></div>
+  <div id="reviewCard"></div>
   <div class="menu">
     ${card('hangul','','가','한글','받침, ㅔ와 ㅐ, 받아쓰기')}
     ${card('math','math','3+4','덧셈 · 뺄셈','10칸 상자로 세어 보기','sm')}
@@ -445,10 +468,19 @@ function renderHome(){
     <h3>🍇 오늘의 칭찬 스티커</h3><div id="homeToday"></div></button>
   <details class="parent" style="margin-top:8px"><summary>어른을 위한 메모</summary>
     <p>아이패드, 갤럭시 탭, 아이폰, 갤럭시 휴대폰의 브라우저에서 모두 열려요. 사파리나 크롬에서 ‘홈 화면에 추가’를 하면 앱처럼 쓸 수 있어요.</p>
-    <p>읽어 주기는 기기에 들어 있는 한국어·영어 음성을 써요. 소리가 안 나면 기기의 무음 모드를 꺼 주세요. 별은 기기마다 따로 저장돼요.</p>
+    <p>읽어 주기는 기기에 들어 있는 한국어·영어 음성을 써요. 소리가 안 나면 기기의 무음 모드를 꺼 주세요. 위쪽 ★는 오늘 모은 별이고, 한 판이 끝날 때 한꺼번에 저장돼요.</p>
     <p>받아쓰기는 손글씨를 자동으로 채점하지 않아요. 정답 글자를 겹쳐 보여 주니 함께 비교해 주세요.</p>
-    <p>한글, 셈하기, 구구단, 파닉스를 한 판씩 끝까지 풀면 과목마다 하루 한 알씩 포도알이 붙어요(받아쓰기는 5개 맞히면 한글 한 알). 선물은 우리집 보드의 공부 탭에서 정해요.</p>
+    <p>한글, 셈하기, 구구단, 파닉스를 한 판(8문제)에서 6개 이상 맞히면 과목마다 하루 한 알씩 포도알이 붙어요(받아쓰기는 5개 잘 쓰면 한글 한 알). 틀린 문제는 ‘다시 풀기’에 모이고, 다시 맞히면 빠져요. 선물·오늘 목표·공부 리포트는 우리집 보드의 공부 탭에서 봐요.</p>
   </details>`;
+  getDoc().then(d=>{if(CUR!=='home')return;const g=$('#todayGoal');
+    const sk=Progress.streak(d),done=Progress.doneToday(d),goal=d.goal?.subjects||2,met=done.length>=goal;
+    g.innerHTML=`<div class="tg-streak"><b>🔥 ${sk}</b><small>${sk?'일 연속 공부':'오늘 시작해 볼까?'}</small></div>
+      <div class="tg-goal${met?' met':''}"><b>${met?'🎉 목표 달성!':`오늘 목표 ${Math.min(done.length,goal)}/${goal}`}</b>
+      <span class="tg-dots">${Object.entries(Grapes.SUBJ).map(([k,v])=>`<i class="${done.includes(k)?'on':''}" title="${v.name}">${v.mark}</i>`).join('')}</span>
+      <small>${met?'정말 잘했어!':`과목 ${goal}개를 한 판씩 풀어 봐요`}</small></div>`;
+    const wait=Progress.reviewList(d).filter(x=>x.n>0&&GAMES[x.kind]);
+    $('#reviewCard').innerHTML=wait.length?`<button class="card reviewcard" data-go="review"><b>🔁 다시 풀기 <span>${Math.min(wait.length,8)}문제</span></b><small>지난번에 틀린 문제를 다시 풀어 봐요. 맞히면 목록에서 빠져요!</small></button>`:'';
+  });
   getStickers().then(st=>{const el=$('#homeToday');if(el)el.innerHTML=todayHtml(st)+`<p style="margin:8px 0 0;color:var(--muted)">포도알 ${st.board.length} / ${Grapes.GOAL}${st.gift?` · 다 채우면 🎁 ${esc(st.gift)}`:''}</p>`});
 }
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -606,7 +638,7 @@ function tenFrames(a,b,op){
   return html;
 }
 function numOpts(ans,max){const s=new Set([ans]);const d=shuffle([-2,-1,1,2,3,-3,10,-10]);for(const x of d){if(s.size>=4)break;const v=ans+x;if(v>=0&&v<=max)s.add(v)}return shuffle([...s])}
-function mathGame(title,gen,max){return{title,pool:()=>Array.from({length:8},gen),
+function mathGame(title,gen,max){return{title,make:gen,pool:()=>Array.from({length:8},()=>gen()),
   q:p=>`<div class="eq">${p.a} ${p.op==='+'?'+':'−'} ${p.b} = <span class="q" id="qa">?</span></div>
     <div class="frames">${tenFrames(p.a,p.b,p.op)}</div>
     <p class="legend">${p.op==='+'?`<i style="background:var(--dot1)"></i>${p.a}개 <i style="background:var(--dot2)"></i>${p.b}개`:`${p.a}개 중에서 ${p.b}개를 지워요`}</p>
@@ -618,11 +650,11 @@ function mathGame(title,gen,max){return{title,pool:()=>Array.from({length:8},gen
       speak(`${p.a} ${p.op==='+'?'더하기':'빼기'} ${p.b}는 ${p.ans}`);
       const why=p.op==='+'?`${p.a}개와 ${p.b}개를 합치면 ${p.ans}개`:`${p.a}개에서 ${p.b}개를 빼면 ${p.ans}개`;
       answer(ok,(ok?'딩동댕! ':`정답은 <b>${p.ans}</b>! `)+why+(p.hint&&!ok?`<br>${p.hint}`:''))})}}}
-const genAdd10=()=>{const a=rnd(1,9),b=rnd(1,10-a);return{a,b,op:'+',ans:a+b}};
-const genSub10=()=>{const a=rnd(2,10),b=rnd(1,a);return{a,b,op:'-',ans:a-b}};
-const genAdd20=()=>{const a=rnd(6,9),b=rnd(11-a,9),need=10-a,rest=b-need;
-  return{a,b,op:'+',ans:a+b,hint:`${a}${eun(a)} ${need}만 더 있으면 10이에요. 그래서 ${b}${eul(b)} ${need}${rang(need)} ${rest}${[3,6,0].includes(rest%10)?'으로':'로'} 나눠요 → 10 + ${rest} = ${a+b}`}};
-const genSub20=()=>{const a=rnd(11,18),b=rnd(a-9,9),first=a-10,rest=b-first;
+const genAdd10=(a=rnd(1,9),b=rnd(1,10-a))=>({a,b,op:'+',ans:a+b});
+const genSub10=(a=rnd(2,10),b=rnd(1,a))=>({a,b,op:'-',ans:a-b});
+const genAdd20=(a=rnd(6,9),b=rnd(11-a,9))=>{const need=10-a,rest=b-need;
+  return{a,b,op:'+',ans:a+b,hint:`${a}${eun(a)} ${need}만 더 있으면 10이에요. 그래서 ${b}${eul(b)} ${need}${rang(need)} ${rest}${ro(rest)} 나눠요 → 10 + ${rest} = ${a+b}`}};
+const genSub20=(a=rnd(11,18),b=rnd(a-9,9))=>{const first=a-10,rest=b-first;
   return{a,b,op:'-',ans:a-b,hint:`${a}에서 먼저 ${first}${eul(first)} 빼면 10이에요. 남은 ${rest}${eul(rest)} 더 빼면 10 − ${rest} = ${a-b}`}};
 
 /* ---------- 구구단 ---------- */
@@ -631,8 +663,8 @@ function groupsHtml(d,n){return Array.from({length:n},()=>`<span class="grp">${'
 function renderTimes(){
   app.innerHTML=`<h2 class="title">구구단</h2>
   <div class="card"><h3>곱하기는 묶음 세기예요</h3>
-    <p><b>${DAN} × 3</b>은 ‘${DAN}개씩 3묶음’이라는 뜻이에요. 묶음을 세어 보면 ${DAN*3}개!</p>
-    <div class="groups">${groupsHtml(DAN,3)}</div></div>
+    <p><b>${DAN||3} × 4</b>는 ‘${DAN||3}개씩 4묶음’이라는 뜻이에요. 묶음을 세어 보면 ${(DAN||3)*4}개!</p>
+    <div class="groups">${groupsHtml(DAN||3,4)}</div></div>
   <div class="chips wrap" id="dans">${[2,3,4,5,6,7,8,9].map(d=>`<button class="chip${d===DAN?' on':''}" data-d="${d}">${d}단</button>`).join('')}<button class="chip${DAN===0?' on':''}" data-d="0">섞어서</button></div>
   ${DAN?`<div class="ttable">${Array.from({length:9},(_,i)=>i+1).map(n=>`<button class="trow" data-n="${n}"><b>${DAN} × ${n} = <em>${DAN*n}</em></b><small>${DAN}개씩 ${n}묶음</small></button>`).join('')}</div>`:'<div class="card"><p>2단부터 9단까지 섞어서 문제가 나와요.</p></div>'}
   <div class="row cta" style="margin-top:14px"><button class="btn primary big" data-go="tquiz">${DAN?DAN+'단':'섞어서'} 퀴즈 풀기</button></div>`;
@@ -723,7 +755,7 @@ const GAMES={
   tquiz:{title:'구구단 퀴즈',pool:()=>DAN?shuffle([1,2,3,4,5,6,7,8,9]).map(n=>({d:DAN,n})):Array.from({length:8},()=>({d:rnd(2,9),n:rnd(1,9)})),
     q:({d,n})=>`<div class="eq">${d} × ${n} = <span class="q" id="qa">?</span></div>
       <div class="groups">${groupsHtml(d,n)}</div><p class="legend">${d}개씩 ${n}묶음</p>
-      <div class="opts">${[...new Set([d*n,d*n+d,Math.max(0,d*n-d),d*n+1,d*n-1])].slice(0,4).sort(()=>Math.random()-.5).map(o=>`<button class="opt" data-v="${o}">${o}</button>`).join('')}</div>`,
+      <div class="opts">${shuffle([...new Set([d*n,d*n+d,Math.max(0,d*n-d),d*n+1,d*n-1])].slice(0,4)).map(o=>`<button class="opt" data-v="${o}">${o}</button>`).join('')}</div>`,
     bind:({d,n})=>{const ans=d*n;
       $$('.opt').forEach(b=>b.onclick=()=>{if(G.answered)return;const ok=+b.dataset.v===ans;
         b.classList.add(ok?'right':'wrong');$$('.opt').find(x=>+x.dataset.v===ans).classList.add('right');$('#qa').textContent=ans;
@@ -755,17 +787,35 @@ const GAMES={
           answer(ok,ok?`Great! <b class="en">${w}</b> — ${[...w].join(' · ')}`:`정답은 <b class="en">${w}</b>예요. 소리를 하나씩: ${[...w].join(' · ')}`)}});
       $$('.sl').forEach(sl=>sl.onclick=()=>{if(G.answered)return;const i=+sl.dataset.s;if(i<filled.length){filled.splice(i,1);draw()}})}},
 };
-function startGame(kind){G={kind,qs:shuffle(GAMES[kind].pool()).slice(0,8),i:0,right:0,answered:false};renderGame()}
+// 문제마다 고유 이름(key): 틀린 문제를 저장했다가 '다시 풀기'에서 똑같이 다시 낸다
+const MATHK=['add10','sub10','add20','sub20'];
+const KEY_OF={quiz:q=>q.it.w+q.it.j,detective:q=>q.it.w+q.it.j,vgame:q=>q.v.w,tquiz:q=>`${q.d}×${q.n}`,first:q=>q.a[0],build:q=>q.w};
+const qKey=(kind,q)=>(KEY_OF[kind]||(q=>`${q.a}${q.op}${q.b}`))(q);
+function qFrom(kind,key){
+  if(!GAMES[kind])return null;
+  if(kind==='tquiz'){const m=/^(\d)×(\d)$/.exec(key);return m&&{d:+m[1],n:+m[2]}}
+  if(MATHK.includes(kind)){const m=/^(\d+)([+-])(\d+)$/.exec(key);return m&&GAMES[kind].make(+m[1],+m[3])}
+  return GAMES[kind].pool().find(q=>qKey(kind,q)===key)||null}
+const newRound=(kind,qs,review=false)=>({kind,qs,review,i:0,right:0,answered:false,missed:[],fixed:[],tally:{},id:roundId(),saved:null});
+function startGame(kind){pending=0;G=newRound(kind,shuffle(GAMES[kind].pool()).slice(0,8).map(q=>({kind,q})));renderGame()}
+function startReview(){
+  const list=Progress.reviewList(DOC||{}).filter(x=>x.n>0&&GAMES[x.kind]).sort((a,b)=>b.n-a.n||b.t-a.t).slice(0,8);
+  const qs=shuffle(list.map(x=>({kind:x.kind,q:qFrom(x.kind,x.key)})).filter(x=>x.q));
+  if(!qs.length){toastMsg('다시 풀 문제가 없어요! 👍');CUR='home';return renderHome()}
+  pending=0;G=newRound('review',qs,true);renderGame()}
 function renderGame(){
-  const def=GAMES[G.kind];if(G.i>=G.qs.length)return renderEnd();
-  const q=G.qs[G.i];G.answered=false;
-  app.innerHTML=`<h2 class="title">${def.title}</h2>
+  if(G.i>=G.qs.length)return renderEnd();
+  const {kind,q}=G.qs[G.i],def=GAMES[kind];G.answered=false;
+  app.innerHTML=`<h2 class="title">${G.review?'🔁 다시 풀기 · ':''}${def.title}</h2>
     <div class="progress">${G.qs.map((_,k)=>`<i class="${k<G.i?'done':k===G.i?'now':''}"></i>`).join('')}</div>
     <div class="card qcard">${def.q(q)}</div><div class="fb" id="fb" aria-live="polite"></div>`;
   def.bind(q);
 }
 function answer(ok,msg){
-  G.answered=true;if(ok){G.right++;addStar()}
+  G.answered=true;const {kind,q}=G.qs[G.i],key=qKey(kind,q),subj=SUBJ_OF[kind];
+  const t=(G.tally[subj]||=[0,0]);t[1]++;
+  if(ok){G.right++;t[0]++;addStar();if(G.review||isWaiting(kind,key))G.fixed.push({kind,key})}
+  else G.missed.push({kind,key});
   mark($('.qcard'),ok);
   $('#fb').innerHTML=ok?`<div class="row" style="margin-bottom:14px"><button class="btn primary big" id="next">다음 ▶</button></div>`
     :`<div class="fbbox no">${msg}<div class="row"><button class="btn primary" id="next">다음 ▶</button></div></div>`;
@@ -773,25 +823,47 @@ function answer(ok,msg){
   $('#fb').scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
 }
 function renderEnd(){
-  const n=G.qs.length,subj=SUBJ_OF[G.kind],kind=G.kind;
-  app.innerHTML=`<div class="card end"><div class="score" id="score">${G.right} / ${n}</div>
-    <h2 class="title">${n}문제 중 ${G.right}개 맞았어요!</h2>
-    <p>${G.right===n?'세윤이 최고! 다 맞혔어.':'틀린 건 괜찮아. 한 번 더 하면 더 잘할 수 있어!'}</p>
-    <div class="prize" id="prize"></div>
-    <div class="row" style="margin-top:16px"><button class="btn primary" id="again">한 번 더</button><button class="btn" data-go="${PARENT[kind]}">목록으로</button></div></div>`;
-  if(G.right===n)mark($('#score'),true);
-  $('#again').onclick=()=>startGame(kind);
-  if(subj)showPrize(subj);
+  const R=G,n=R.qs.length,subj=R.review?null:SUBJ_OF[R.kind],ok=passed(R.right,n);
+  const need=Math.ceil(n*.75);
+  const msg=R.review?(R.fixed.length?`틀렸던 문제 ${R.fixed.length}개를 다시 맞혔어요! 👏`:'괜찮아, 다음에 또 해 보자!')
+    :R.right===n?'세윤이 최고! 다 맞혔어.':ok?'잘했어! 포도알 받을 만큼 맞혔어.':`${need}개 이상 맞히면 포도알을 받아요. 한 번 더 해 볼까?`;
+  app.innerHTML=`<div class="card end"><div class="score" id="score">${R.right} / ${n}</div>
+    <h2 class="title">${n}문제 중 ${R.right}개 맞았어요!</h2>
+    <p>${msg}</p>
+    <div class="prize" id="prize"><p class="giftline"><small>저장하는 중…</small></p></div>
+    <div class="row" style="margin-top:16px"><button class="btn primary${!ok&&!R.review?' big':''}" id="again">${!ok&&!R.review?'💪 한 번 더':'한 번 더'}</button><button class="btn" data-go="${R.review?'home':PARENT[R.kind]}">목록으로</button></div></div>`;
+  if(R.right===n)mark($('#score'),true);
+  $('#again').onclick=()=>R.review?startReview():startGame(R.kind);
+  const p={roundId:R.id,date:today(),subject:subj||undefined,kind:R.review?undefined:R.kind,review:R.review,right:R.right,total:n,stars:R.right,tally:R.tally,missed:R.missed,fixed:R.fixed};
+  submitRound(p,subj);
 }
-async function showPrize(subj){
-  const r=await award(subj),el=$('#prize');if(!el)return;const name=Grapes.SUBJ[subj].name;
-  el.innerHTML=(r.added?`<p class="giftline" style="color:var(--grape)">🍇 ${name} 포도알을 붙였어요!</p>`
-    :r.full?`<p class="giftline">포도송이가 꽉 찼어요! 엄마 아빠에게 보여 주세요 🎁</p>`
+async function submitRound(p,subj){
+  const el=$('#prize');if(el)el.innerHTML='<p class="giftline"><small>저장하는 중…</small></p>';
+  const r=await saveRound(p);
+  if(!r.error)pending=0;showStars();
+  const box=$('#prize');if(!box)return;
+  if(r.error){box.innerHTML=`<div class="fbbox no"><p style="margin:0 0 8px">😢 별${subj?'과 포도알':''}을 저장하지 못했어요. 인터넷이 연결됐는지 확인하고 다시 눌러 주세요.<br><small>${esc(r.error)}</small></p>
+      <div class="row"><button class="btn primary" id="resave">다시 저장하기</button></div></div>`;
+    $('#resave').onclick=()=>submitRound(p,subj);return}
+  const st=r.doc.stickers||EMPTY();
+  if(!subj){box.innerHTML=`<p class="giftline"><small>★ ${p.stars}개를 저장했어요.</small></p>`;return}
+  const name=Grapes.SUBJ[subj].name,a=r.award;
+  box.innerHTML=(a==='added'?`<p class="giftline" style="color:var(--grape)">🍇 ${name} 포도알을 붙였어요!</p>`
+    :a==='full'?`<p class="giftline">포도송이가 꽉 찼어요! 엄마 아빠에게 보여 주세요 🎁</p>`
+    :a==='low'?`<p class="giftline"><small>이번 판은 포도알이 없어요. ${Math.ceil(p.total*.75)}개 이상 맞히면 받아요!</small></p>`
     :`<p class="giftline"><small>오늘 ${name} 포도알은 벌써 받았어요. 다른 과목도 해 볼까?</small></p>`)
-    +Grapes.svg(r.st.board,r.added?r.st.board.length-1:-1)+`<p class="giftline"><small>${r.st.board.length} / ${Grapes.GOAL}알${r.st.gift?` · 다 채우면 🎁 ${esc(r.st.gift)}`:''}</small></p>`;
+    +Grapes.svg(st.board,a==='added'?st.board.length-1:-1)+`<p class="giftline"><small>${st.board.length} / ${Grapes.GOAL}알${st.gift?` · 다 채우면 🎁 ${esc(st.gift)}`:''}</small></p>`;
 }
 
 /* ---------- 받아쓰기 ---------- */
+// 5개를 잘 쓸 때마다 한 번에 저장(한글 포도알 후보), 나갈 때 남은 별도 저장
+async function saveWrite(k,subject){if(!k)return;const p={roundId:roundId(),date:today(),subject,kind:'write',right:k,total:k,stars:k,tally:{han:[k,k]}};
+  pending=Math.max(0,pending-k);const r=await saveRound(p);
+  if(r.error){pending+=k;showStars();toastMsg('별을 저장하지 못했어요. 인터넷을 확인해 주세요');W.unsaved=(W.unsaved||0)+k;return}
+  if(r.award==='added')toastMsg('🍇 받아쓰기 5개! 한글 포도알을 붙였어요')}
+function flushWrite(){const k=(W.good||0)%5+(W.unsaved||0);W.good=0;W.unsaved=0;if(k)saveWrite(k)}
+addEventListener('pagehide',()=>{if(CUR==='write'&&CODE){const k=(W.good||0)%5;if(k)try{fetch('/api/family',{method:'POST',keepalive:true,headers:{'content-type':'application/json'},
+  body:JSON.stringify({code:CODE,op:'finishRound',p:{roundId:roundId(),date:today(),kind:'write',right:k,total:k,stars:k,tally:{han:[k,k]}}})})}catch(e){}}});
 let W={list:shuffle(WRITE),i:0,mode:'listen'};
 function renderWrite(){
   const it=W.list[W.i%W.list.length];
@@ -817,7 +889,7 @@ function renderWrite(){
       <p>빨간 글자랑 세윤이 글자를 비교해 봐!</p>
       <div class="row"><button class="btn primary" id="good">똑같이 썼어 ★</button><button class="btn" id="retry">다시 써 볼래</button></div>`;
     $('#good').onclick=()=>{addStar();mark($('#boxwrap'),true);$('#wfb').innerHTML='';W.good=(W.good||0)+1;
-      if(W.good%5===0)award('han').then(r=>{if(r.added)toastMsg('🍇 받아쓰기 5개! 한글 포도알을 붙였어요')});
+      if(W.good%5===0)saveWrite(5,'han');
       setTimeout(()=>{W.i++;if(CUR==='write')renderWrite()},1300)};
     $('#retry').onclick=()=>$('#clear').click();
   };
