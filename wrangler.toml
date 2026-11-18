@@ -8,7 +8,7 @@ id = "ef8f0abda9374d23a677cc1ca4a0824c"
 
 # 가족 달리기(여러 기기 실시간 방). workers/race 를 먼저 배포한 뒤 아래 네 줄의 # 을 지우고 다시 배포하세요.
 # (배포 전 Worker 가 없는데 이 줄을 켜면 Pages 배포가 실패할 수 있어요. 자세한 순서는 UPGRADE_NOTES_ko.md)
-# [[durable_objects.bindings]]
-# name = "RACE"
-# class_name = "RaceRoom"
-# script_name = "urijip-race"
+[[durable_objects.bindings]]
+name = "RACE"
+class_name = "RaceRoom"
+script_name = "urijip-race"
