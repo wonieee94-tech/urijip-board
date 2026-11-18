@@ -915,6 +915,7 @@ function renderHub(){
   <div class="hub">
     <button class="gcard" data-go="runway"><span class="art" style="background:#14171D">🛫</span><b>활주로 이착륙</b><span>조종석에 앉아 출력 레버를 밀고, 조종간을 당겨 이륙해요.</span></button>
     <button class="gcard" data-go="trip"><span class="art" style="background:#FFC72C">✈️</span><b>${kidName()}항공 여행</b><span>인천에서 이륙해 세계 ${DESTS.length}개 도시로! 열쇠를 모으면 새 나라가 열려요.</span></button>
+    <a class="gcard" href="/race.html" style="text-decoration:none;color:inherit"><span class="art" style="background:#C4553F url(/img/stadium.webp) center 35%/cover">🏃</span><b>가족 달리기</b><span>버튼을 타다닥! 엄마·아빠 폰과 같이, 또는 거북·토끼·치타와 시합해요.</span></a>
     <button class="gcard" data-go="map"><span class="art" style="background:#9ED3F5">🌍</span><b>세계 시계 지도</b><span>미국은 지금 몇 시? 낮인 나라, 밤인 나라를 찾아봐요.</span></button>
     <button class="gcard" data-go="quiz"><span class="art" style="background:#B48AF0">❓</span><b>지도 퀴즈</b><span>밤인 도시 찾기, 시차 맞히기, 국기 맞히기!${T.travel.best.quiz?` 최고 ${T.travel.best.quiz}점`:''}</span></button>
     <button class="gcard" data-go="passport"><span class="art" style="background:#F5B0C0">🛂</span><b>내 여권</b><span>${T.travel.stamps.length?`도장 ${T.travel.stamps.length}개 · 여행 별 ⭐ ${T.travel.stars}`:'여행을 다녀오면 도장이 찍혀요.'}</span></button>

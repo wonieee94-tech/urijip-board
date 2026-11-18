@@ -59,11 +59,23 @@
 - 상태: ‘학교’를 고르면 보드에 ‘유치원’으로 나오던 것 고침. ‘학교’와 ‘유치원’을 따로 고를 수 있게 서버 상태에 `kinder` 추가(예전 `school` 은 그대로 학교).
 - 놀이 탭: 여권 도장이 ‘이 기기에만’ 저장된다는 옛 안내를 ‘가족 보드에 저장돼서 다른 기기에서도 이어져요’로 고침.
 
+### 9. 가족 달리기 (새 놀이, `public/race.html`)
+- 큰 버튼을 타다닥 눌러 달리는 시합. 놀이터·보드 놀이 탭에 ‘가족 달리기’ 카드.
+- **가족 방(여러 기기)**: 한 기기가 ‘가족 방 만들기’ → 다른 가족 기기(엄마폰·아빠폰·세윤 태블릿)에 ‘가족 방에 참여하기’가 떠요(2.5초마다 확인). 누가 달리는지는 가족 구성원에서 골라요. 방장이 ‘모두 출발’ → 모든 기기에서 같은 시각에 3·2·1 → 달리는 모습이 실시간으로 다 보이고 → 시상대·기록. 방장이 ‘한 번 더’.
+- **혼자 달리기**: 거북(쉬움)·토끼(보통)·치타(어려움) 컴퓨터 1~3명과. 1초에 5번쯤 누르는 아이는 쉬움을 이기고, 보통은 비슷, 어려움은 1초에 6~7번 넘게 눌러야 해요.
+- **한 기기에서 둘이**: 태블릿 하나로 왼쪽·오른쪽 버튼(키보드 A·L). 가족 방이 설정되지 않았거나 인터넷이 없을 때도 돼요.
+- 4명까지(빈 자리는 방장이 컴퓨터 친구로 채울 수 있음). 1초에 12번까지만 세요(서버와 화면 둘 다, 연타 기계·손가락 여러 개 막기).
+- 아이(구성원 역할이 아이)가 자기 기기에서 완주하면 여행 별 1개, 1등이면 2개(`gameResult` key `race`).
+- 규칙은 `public/race-core.mjs` 한 파일 — 브라우저(혼자·둘이), Durable Object(가족 방), 테스트가 같이 씀.
+- 실시간 서버: `workers/race/` (Durable Object `RaceRoom`, 가족 코드마다 방 하나, WebSocket, 잠자기(hibernation) 지원) + `functions/api/race.js`(가족 코드 확인·다른 사이트 접속 막기 후 방으로 연결). 설정 전에는 `/api/race` 가 501 → 화면은 혼자·둘이만 보여 줘요.
+- 경기장 그림 `img/stadium.webp`(32KB)·`img/turf.webp`(4KB), 트랙·선·결승 아치·주자는 canvas로 그려요. 소리(발소리·삐삐·환호·팡파르)·진동.
+
 ## 확인한 것
-- `npm test` (node --test): 23개 통과 — 서버 규칙(finishRound 75%·중복 판·틀린 문제 줄·PIN·휴지통·날짜) + 한글 도움 코드 + 다음 판 만들기(틀린 문제 먼저).
+- `npm test` (node --test): 29개 통과 (달리기 규칙 6개 포함) — 서버 규칙(finishRound 75%·중복 판·틀린 문제 줄·PIN·휴지통·날짜) + 한글 도움 코드 + 다음 판 만들기(틀린 문제 먼저).
 - dev-server 로 보드·공부방·놀이터 전부 열기 + API(만들기·PIN·지우기·되살리기·잘못된 날짜) 스모크 테스트, 콘솔 오류·CSP 위반 없음.
 - `wrangler pages dev` 로 실제 Pages Functions + 로컬 KV 에서 만들기·finishRound·PIN·지우기·되살리기·머리말 확인.
 - 헤드리스 Chrome(폰 세로 412×915)에서 이륙(레버 밀기 → ROTATE → 조종간 당기기), 착륙(FLARE → 브레이크), 파리 여행 끝까지(도장·열쇠 열림 서버 저장), 퀴즈·여권 확인.
+- 달리기: `wrangler dev`(workers/race) + `wrangler pages dev --do RACE=RaceRoom@urijip-race` 로 헤드리스 Chrome 3대(엄마 412×915, 아빠 390×844, 세윤 태블릿 768×1024)가 한 방에서 참여→출발→실시간 달리기→같은 결과·시상대→한 번 더→나가기(방장 넘기기)까지 확인. WebSocket으로 2초 동안 초당 2000번 보내도 27번만 인정(상한 28). 잘못된 코드 400·없는 가족 404·다른 사이트 Origin 403. 혼자(쉬움/보통)·둘이(태블릿) 모드 끝까지, 아이 완주 시 여행 별 저장 확인.
 - 오프라인: 공부방·놀이터는 저장본으로 열림, 보드는 `다시 불러오기` 안내, 없는 파일은 HTML로 대신하지 않음.
 
 ## 올린 뒤 할 일 (부모님)
@@ -72,6 +84,15 @@
 3. 공부 탭에서 **오늘 목표** 과목 수 고르기(기본 2과목).
 4. 새 KV 키: `trash:<코드>`(30일 뒤 자동 삭제), `rl:create:<IP>:<시간>`(1시간 뒤 자동 삭제). 가족 문서에 `learn`, `review`, `goal`, `travel`, `seen`, `lastRound`, `pin`(해시) 필드가 생김 — 읽을 때 자동으로 채워져서 따로 옮길 것 없음.
 5. 예전 앱 버전과 섞여도 됨: 예전 `addSticker`/`addStars` 요청도 계속 받음.
+6. **가족 달리기 ‘가족 방’ 켜기 (한 번만, 선택)** — 안 하면 혼자·둘이 모드만 보여요.
+   1. Cloudflare 무료 요금제에서도 돼요(SQLite 저장소 Durable Object). 로그인: `npx wrangler login`
+   2. 방 서버 배포: `cd workers/race && npx wrangler deploy` → `urijip-race` Worker 와 `RaceRoom` Durable Object 가 생겨요.
+   3. 저장소 맨 위 `wrangler.toml` 아래쪽의 `[[durable_objects.bindings]]` 네 줄 앞 `#` 을 지워요(name `RACE`, class_name `RaceRoom`, script_name `urijip-race`).
+   4. 보드를 평소처럼 다시 배포: `npx wrangler pages deploy public --project-name urijip-board --branch main`
+      (대시보드에서 하려면: Workers & Pages → urijip-board → 설정 → 바인딩 → Durable Object 추가 → 변수 이름 `RACE`, 네임스페이스 `urijip-race / RaceRoom`. 단, `wrangler.toml` 이 있으면 그 파일이 우선이라 3번 방법을 권해요.)
+   5. 확인: 폰에서 놀이터 → 가족 달리기 → ‘가족 방 만들기’가 눌리면 성공. 다른 기기에 ‘참여하기’가 떠요.
+   6. 내 PC 확인: 터미널 두 개 — `cd workers/race && npx wrangler dev --port 8787` / 저장소 위치에서 `npx wrangler pages dev public --do RACE=RaceRoom@urijip-race`
+   - 비용: 방은 가족 코드마다 하나, 대기 중엔 잠들어서 거의 안 들어요. 달리는 동안만 0.1초마다 위치를 보내요.
 
 ## 이번에 안 한 것 (2차 후보)
 - KV 동시 쓰기 완전 보장(Durable Objects), 기기별 로그인.

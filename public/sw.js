@@ -1,8 +1,8 @@
 // 우리집 보드 서비스 워커 — 홈 화면 앱 설치·끊김 대비용. 가족 데이터(/api/)는 절대 저장하지 않는다.
 // 화면을 고쳐 올릴 때 VERSION 을 올리면 옛 저장본이 지워진다.
-const VERSION = '20-2026-11-18';
+const VERSION = '21-2026-11-18';
 const CACHE = 'urijip-' + VERSION;
-const SHELL = ['/', '/study.html', '/games.html', '/app.css', '/theme.css', '/skins.css', '/grapes.js', '/hangul.js', '/progress.js', '/icon.svg', '/manifest.webmanifest'];
+const SHELL = ['/', '/study.html', '/games.html', '/app.css', '/theme.css', '/skins.css', '/grapes.js', '/hangul.js', '/progress.js', '/race.html', '/race-core.mjs', '/icon.svg', '/manifest.webmanifest'];
 const NET_WAIT = 3000; // 인터넷이 느리면 3초 뒤 저장본을 보여 준다
 
 // /study, /study.html 처럼 같은 화면은 한 이름으로 저장한다 (Cloudflare 는 .html 을 뺀 주소로 보낸다)

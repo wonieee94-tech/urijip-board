@@ -53,6 +53,10 @@ http.createServer(async (req, res) => {
       res.writeHead(status, { ...headersFor(url.pathname), 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
       return res.end(JSON.stringify(data));
     }
+    if (url.pathname === '/api/race') { // PC 서버에는 실시간 방이 없다 → 화면은 혼자·둘이 모드만
+      res.writeHead(501, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+      return res.end(JSON.stringify({ error: '가족 달리기 방은 wrangler dev 로 확인해요', setup: true }));
+    }
     let rel;
     try { rel = decodeURIComponent(url.pathname); } catch { res.writeHead(400); return res.end('bad path'); }
     let file = path.join(pub, rel);

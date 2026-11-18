@@ -88,3 +88,7 @@ def key_green(im, box=None, width=None):
 save(key_green(load('plane-green.jpg'), width=480), 'plane.webp', 82, 90)
 # 6) 먹구름 (번개는 놀이 화면에서 깜빡이게 따로 그림)
 save(key_green(load('storm-green.jpg', (1024, 768)), box=(215, 150, 805, 480), width=300), 'storm.webp', 76, 80)
+# 7) 달리기 경기장: 위쪽(하늘·관중석·먼 트랙)은 배경, 아래 잔디는 트랙 옆 잔디 무늬로
+st = load('stadium.jpg')
+save(st.crop((0, 0, 1024, 392)), 'stadium.webp', 72)
+save(st.crop((0, 440, 1024, 576)).resize((512, 68), Image.LANCZOS), 'turf.webp', 62)
