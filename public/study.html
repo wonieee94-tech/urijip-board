@@ -290,15 +290,15 @@ body::before{background:var(--bg)}
 .parent{border:1px dashed var(--hair)}
 .opt.right{border-color:var(--accent)}.opt.wrong{border-color:var(--move)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.mark path{stroke-dashoffset:0}}
-/* 오늘 목표·연속 공부·다시 풀기 */
+/* 오늘 목표·연속 공부·지난번에 틀린 문제 */
+.again-tag{margin:0 0 10px;padding:8px 12px;border-radius:12px;background:var(--move-soft);border:2px solid var(--move);color:var(--ink);font-weight:700;text-align:center}
+.progress i.again:not(.done){outline:2px solid var(--move);outline-offset:1px}
 .today-goal{display:grid;grid-template-columns:auto 1fr;gap:10px;margin:0 0 14px}
 .today-goal>div{background:var(--surface);border:2px solid var(--line);border-radius:var(--r);padding:10px 14px}
 .tg-streak{text-align:center;min-width:92px}.tg-streak b{display:block;font-size:28px;line-height:1.1}.tg-streak small,.tg-goal small{color:var(--muted);font-size:14px}
 .tg-goal b{display:block;font-size:19px}.tg-goal.met{border-color:var(--grape);background:var(--grape-soft)}
 .tg-dots{display:flex;gap:6px;margin:4px 0}.tg-dots i{font-style:normal;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px dashed var(--line);font-size:14px;color:var(--muted)}
 .tg-dots i.on{border:2px solid var(--grape);background:var(--grape);color:#fff}
-.reviewcard{display:block;width:100%;text-align:left;border:2px solid var(--move);background:var(--move-soft);margin:0 0 14px;cursor:pointer;color:var(--ink);font:inherit}
-.reviewcard b{display:block;font-size:20px}.reviewcard b span{color:var(--move)}.reviewcard small{color:var(--muted)}
 </style>
 
 </head>
@@ -408,10 +408,9 @@ const passed=(r,t)=>t>=4&&r>=Math.ceil(t*.75);
 function localFinish(p){const d=localData(),day=p.date;
   d.study[day]=(d.study[day]||0)+p.stars;
   const L=(d.learn[day]||={});for(const[k,[r,t]]of Object.entries(p.tally)){const x=(L[k]||={r:0,t:0,n:0});x.r+=r;x.t+=t;x.n++}
-  for(const m of p.missed){const e=((d.review[m.kind]||={})[m.key]||={n:0,t:0,at:Date.now()});e.n=Math.min(3,e.n+1);e.t++;e.at=Date.now()}
-  for(const m of p.fixed){const e=d.review[m.kind]?.[m.key];if(e)e.n=Math.max(0,e.n-1)}
+  Progress.applyReview(d.review,p.kind,p.missed,p.fixed);
   let award='none';const st=d.stickers;
-  if(p.subject&&!p.review){if(!passed(p.right,p.total))award='low';else if(st.board.some(x=>x.date===day&&x.subject===p.subject))award='had';
+  if(p.subject){if(!passed(p.right,p.total))award='low';else if(st.board.some(x=>x.date===day&&x.subject===p.subject))award='had';
     else if(st.board.length>=Grapes.GOAL)award='full';else{st.board.push({date:day,subject:p.subject,at:Date.now()});award='added'}}
   d.lastRound={id:p.roundId,award};saveLocalData(d);return d}
 // 지금 기록 (서버 또는 이 기기)
@@ -424,7 +423,7 @@ const roundId=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 async function saveRound(p){
   if(!CODE){DOC=localFinish(p);showStars();return{doc:DOC,award:DOC.lastRound.award}}
   try{const d=await server('finishRound',p);DOC=d;if(d.skin)applySkin(d.skin);showStars();
-    return{doc:d,award:d.lastRound?.id===p.roundId?d.lastRound.award:(p.subject&&!p.review?'had':'none')}}
+    return{doc:d,award:d.lastRound?.id===p.roundId?d.lastRound.award:(p.subject?'had':'none')}}
   catch(e){return{error:e.message||'저장하지 못했어요'}}}
 const isWaiting=(kind,key)=>(DOC?.review?.[kind]?.[key]?.n||0)>0;
 const SUBJ_OF=Progress.SUBJ_OF;
@@ -437,7 +436,7 @@ function addStar(){pending++;showStars(true)}
 showStars();getDoc();
 
 /* ---------- 화면 이동 ---------- */
-const PARENT={review:'home',grapes:'home',hangul:'home',math:'home',times:'home',phonics:'home',
+const PARENT={grapes:'home',hangul:'home',math:'home',times:'home',phonics:'home',
   story:'hangul',vowel:'hangul',write:'hangul',quiz:'hangul',detective:'hangul',vgame:'hangul',
   add10:'math',sub10:'math',add20:'math',sub20:'math',tquiz:'times',abc:'phonics',first:'phonics',build:'phonics'};
 let CUR='home';
@@ -445,7 +444,7 @@ const VIEWS={grapes:renderGrapes,home:renderHome,hangul:renderHangul,story:rende
 function go(v){try{speechSynthesis.cancel()}catch(e){}
   if(CUR==='write'&&v!=='write')flushWrite();
   CUR=v;$('#backBtn').hidden=v==='home';$('#homeLink').hidden=v!=='home';
-  if(v==='review')startReview();else if(GAMES[v])startGame(v);else VIEWS[v]();
+  if(GAMES[v])startGame(v);else VIEWS[v]();
   window.scrollTo(0,0)}
 $('#backBtn').onclick=()=>go(PARENT[CUR]||'home');
 app.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g)go(g.dataset.go)});
@@ -456,7 +455,6 @@ function renderHome(){
   app.innerHTML=`
   <section class="hello"><p class="eyebrow">오늘의 공부 놀이</p><h1>세윤아, 뭐부터 해 볼까?</h1></section>
   <div class="today-goal" id="todayGoal" aria-live="polite"></div>
-  <div id="reviewCard"></div>
   <div class="menu">
     ${card('hangul','','가','한글','받침, ㅔ와 ㅐ, 받아쓰기')}
     ${card('math','math','3+4','덧셈 · 뺄셈','10칸 상자로 세어 보기','sm')}
@@ -468,7 +466,7 @@ function renderHome(){
     <p>아이패드, 갤럭시 탭, 아이폰, 갤럭시 휴대폰의 브라우저에서 모두 열려요. 사파리나 크롬에서 ‘홈 화면에 추가’를 하면 앱처럼 쓸 수 있어요.</p>
     <p>읽어 주기는 기기에 들어 있는 한국어·영어 음성을 써요. 소리가 안 나면 기기의 무음 모드를 꺼 주세요. 위쪽 ★는 오늘 모은 별이고, 한 판이 끝날 때 한꺼번에 저장돼요.</p>
     <p>받아쓰기는 손글씨를 자동으로 채점하지 않아요. 정답 글자를 겹쳐 보여 주니 함께 비교해 주세요.</p>
-    <p>한글, 셈하기, 구구단, 파닉스를 한 판(8문제)에서 6개 이상 맞히면 과목마다 하루 한 알씩 포도알이 붙어요(받아쓰기는 5개 잘 쓰면 한글 한 알). 틀린 문제는 ‘다시 풀기’에 모이고, 다시 맞히면 빠져요. 선물·오늘 목표·공부 리포트는 우리집 보드의 공부 탭에서 봐요.</p>
+    <p>한글, 셈하기, 구구단, 파닉스를 한 판(8문제)에서 6개 이상 맞히면 과목마다 하루 한 알씩 포도알이 붙어요(받아쓰기는 5개 잘 쓰면 한글 한 알). 틀린 문제는 그 놀이의 다음 판 맨 앞에 다시 나오고(한 판에 8개까지, 먼저 틀린 것부터), 맞히면 빠져요. 다른 기기에서 풀어도 이어져요. 선물·오늘 목표·공부 리포트는 우리집 보드의 공부 탭에서 봐요.</p>
   </details>`;
   getDoc().then(d=>{if(CUR!=='home')return;const g=$('#todayGoal');
     const sk=Progress.streak(d),done=Progress.doneToday(d),goal=d.goal?.subjects||2,met=done.length>=goal;
@@ -476,8 +474,6 @@ function renderHome(){
       <div class="tg-goal${met?' met':''}"><b>${met?'🎉 목표 달성!':`오늘 목표 ${Math.min(done.length,goal)}/${goal}`}</b>
       <span class="tg-dots">${Object.entries(Grapes.SUBJ).map(([k,v])=>`<i class="${done.includes(k)?'on':''}" title="${v.name}">${v.mark}</i>`).join('')}</span>
       <small>${met?'정말 잘했어!':`과목 ${goal}개를 한 판씩 풀어 봐요`}</small></div>`;
-    const wait=Progress.reviewList(d).filter(x=>x.n>0&&GAMES[x.kind]);
-    $('#reviewCard').innerHTML=wait.length?`<button class="card reviewcard" data-go="review"><b>🔁 다시 풀기 <span>${Math.min(wait.length,8)}문제</span></b><small>지난번에 틀린 문제를 다시 풀어 봐요. 맞히면 목록에서 빠져요!</small></button>`:'';
   });
   getStickers().then(st=>{const el=$('#homeToday');if(el)el.innerHTML=todayHtml(st)+`<p style="margin:8px 0 0;color:var(--muted)">포도알 ${st.board.length} / ${Grapes.GOAL}${st.gift?` · 다 채우면 🎁 ${esc(st.gift)}`:''}</p>`});
 }
@@ -785,7 +781,7 @@ const GAMES={
           answer(ok,ok?`Great! <b class="en">${w}</b> — ${[...w].join(' · ')}`:`정답은 <b class="en">${w}</b>예요. 소리를 하나씩: ${[...w].join(' · ')}`)}});
       $$('.sl').forEach(sl=>sl.onclick=()=>{if(G.answered)return;const i=+sl.dataset.s;if(i<filled.length){filled.splice(i,1);draw()}})}},
 };
-// 문제마다 고유 이름(key): 틀린 문제를 저장했다가 '다시 풀기'에서 똑같이 다시 낸다
+// 문제마다 고유 이름(key): 틀린 문제를 저장했다가 그 놀이의 다음 판 맨 앞에 똑같이 다시 낸다
 const MATHK=['add10','sub10','add20','sub20'];
 const KEY_OF={quiz:q=>q.it.w+q.it.j,detective:q=>q.it.w+q.it.j,vgame:q=>q.v.w,tquiz:q=>`${q.d}×${q.n}`,first:q=>q.a[0],build:q=>q.w};
 const qKey=(kind,q)=>(KEY_OF[kind]||(q=>`${q.a}${q.op}${q.b}`))(q);
@@ -794,25 +790,26 @@ function qFrom(kind,key){
   if(kind==='tquiz'){const m=/^(\d)×(\d)$/.exec(key);return m&&{d:+m[1],n:+m[2]}}
   if(MATHK.includes(kind)){const m=/^(\d+)([+-])(\d+)$/.exec(key);return m&&GAMES[kind].make(+m[1],+m[3])}
   return GAMES[kind].pool().find(q=>qKey(kind,q)===key)||null}
-const newRound=(kind,qs,review=false)=>({kind,qs,review,i:0,right:0,answered:false,missed:[],fixed:[],tally:{},id:roundId(),saved:null});
-function startGame(kind){pending=0;G=newRound(kind,shuffle(GAMES[kind].pool()).slice(0,8).map(q=>({kind,q})));renderGame()}
-function startReview(){
-  const list=Progress.reviewList(DOC||{}).filter(x=>x.n>0&&GAMES[x.kind]).sort((a,b)=>b.n-a.n||b.t-a.t).slice(0,8);
-  const qs=shuffle(list.map(x=>({kind:x.kind,q:qFrom(x.kind,x.key)})).filter(x=>x.q));
-  if(!qs.length){toastMsg('다시 풀 문제가 없어요! 👍');CUR='home';return renderHome()}
-  pending=0;G=newRound('review',qs,true);renderGame()}
+const newRound=(kind,qs)=>({kind,qs,i:0,right:0,answered:false,missed:[],fixed:[],tally:{},id:roundId(),saved:null});
+// 한 판 = 지난번에 틀린 문제(먼저 틀린 것부터, 최대 8개) + 새 문제. 틀린 문제는 다시 맞힐 때까지 매 판 맨 앞에 나온다
+async function startGame(kind){pending=0;if(!DOC){app.innerHTML='<p class="empty" style="text-align:center;color:var(--muted)">문제를 준비하는 중…</p>';await getDoc();if(CUR!==kind)return}
+  // 새 문제 후보: 무작위로 만드는 놀이(셈하기 등)는 겹치는 문제가 있어 몇 번 더 만들어 둔다
+  const fresh=[];for(let k=0;k<6&&new Set(fresh.map(q=>qKey(kind,q))).size<16;k++)fresh.push(...shuffle(GAMES[kind].pool()));
+  const plan=Progress.planRound(Progress.queueOf(DOC,kind),k=>qFrom(kind,k),fresh,q=>qKey(kind,q),8);
+  G=newRound(kind,plan.map(x=>({kind,q:x.q,again:x.again})));renderGame()}
 function renderGame(){
   if(G.i>=G.qs.length)return renderEnd();
-  const {kind,q}=G.qs[G.i],def=GAMES[kind];G.answered=false;
-  app.innerHTML=`<h2 class="title">${G.review?'🔁 다시 풀기 · ':''}${def.title}</h2>
-    <div class="progress">${G.qs.map((_,k)=>`<i class="${k<G.i?'done':k===G.i?'now':''}"></i>`).join('')}</div>
+  const {kind,q,again}=G.qs[G.i],def=GAMES[kind];G.answered=false;
+  app.innerHTML=`<h2 class="title">${def.title}</h2>
+    <div class="progress">${G.qs.map((x,k)=>`<i class="${k<G.i?'done':k===G.i?'now':''}${x.again?' again':''}"></i>`).join('')}</div>
+    ${again?'<p class="again-tag">🔁 지난번에 틀린 문제예요. 이번엔 맞혀 볼까?</p>':''}
     <div class="card qcard">${def.q(q)}</div><div class="fb" id="fb" aria-live="polite"></div>`;
   def.bind(q);
 }
 function answer(ok,msg){
   G.answered=true;const {kind,q}=G.qs[G.i],key=qKey(kind,q),subj=SUBJ_OF[kind];
   const t=(G.tally[subj]||=[0,0]);t[1]++;
-  if(ok){G.right++;t[0]++;addStar();if(G.review||isWaiting(kind,key))G.fixed.push({kind,key})}
+  if(ok){G.right++;t[0]++;addStar();if(G.qs[G.i].again||isWaiting(kind,key))G.fixed.push({kind,key})}
   else G.missed.push({kind,key});
   mark($('.qcard'),ok);
   $('#fb').innerHTML=ok?`<div class="row" style="margin-bottom:14px"><button class="btn primary big" id="next">다음 ▶</button></div>`
@@ -821,18 +818,21 @@ function answer(ok,msg){
   $('#fb').scrollIntoView({behavior:reduce?'auto':'smooth',block:'nearest'});
 }
 function renderEnd(){
-  const R=G,n=R.qs.length,subj=R.review?null:SUBJ_OF[R.kind],ok=passed(R.right,n);
+  const R=G,n=R.qs.length,subj=SUBJ_OF[R.kind],ok=passed(R.right,n);
   const need=Math.ceil(n*.75);
-  const msg=R.review?(R.fixed.length?`틀렸던 문제 ${R.fixed.length}개를 다시 맞혔어요! 👏`:'괜찮아, 다음에 또 해 보자!')
-    :R.right===n?'세윤이 최고! 다 맞혔어.':ok?'잘했어! 포도알 받을 만큼 맞혔어.':`${need}개 이상 맞히면 포도알을 받아요. 한 번 더 해 볼까?`;
+  // 저장을 기다리지 않고 바로 다음 판에 넣는다 (서버에도 같은 규칙으로 저장됨)
+  if(DOC){DOC.review||={};Progress.applyReview(DOC.review,R.kind,R.missed,R.fixed)}
+  const left=Progress.queueOf(DOC,R.kind).length;
+  const msg=(R.fixed.length?`지난번에 틀린 문제 ${R.fixed.length}개를 맞혔어요! 👏 `:'')+(R.right===n?'세윤이 최고! 다 맞혔어.':ok?'잘했어! 포도알 받을 만큼 맞혔어.':`${need}개 이상 맞히면 포도알을 받아요. 한 번 더 해 볼까?`)
+    +(left?`<br><small>틀린 문제 ${left}개는 다음 판 맨 앞에 다시 나와요.</small>`:'');
   app.innerHTML=`<div class="card end"><div class="score" id="score">${R.right} / ${n}</div>
     <h2 class="title">${n}문제 중 ${R.right}개 맞았어요!</h2>
     <p>${msg}</p>
     <div class="prize" id="prize"><p class="giftline"><small>저장하는 중…</small></p></div>
-    <div class="row" style="margin-top:16px"><button class="btn primary${!ok&&!R.review?' big':''}" id="again">${!ok&&!R.review?'💪 한 번 더':'한 번 더'}</button><button class="btn" data-go="${R.review?'home':PARENT[R.kind]}">목록으로</button></div></div>`;
+    <div class="row" style="margin-top:16px"><button class="btn primary${!ok?' big':''}" id="again">${!ok?'💪 한 번 더':'한 번 더'}</button><button class="btn" data-go="${PARENT[R.kind]}">목록으로</button></div></div>`;
   if(R.right===n)mark($('#score'),true);
-  $('#again').onclick=()=>R.review?startReview():startGame(R.kind);
-  const p={roundId:R.id,date:today(),subject:subj||undefined,kind:R.review?undefined:R.kind,review:R.review,right:R.right,total:n,stars:R.right,tally:R.tally,missed:R.missed,fixed:R.fixed};
+  $('#again').onclick=()=>startGame(R.kind);
+  const p={roundId:R.id,date:today(),subject:subj||undefined,kind:R.kind,right:R.right,total:n,stars:R.right,tally:R.tally,missed:R.missed,fixed:R.fixed};
   submitRound(p,subj);
 }
 async function submitRound(p,subj){

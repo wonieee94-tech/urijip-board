@@ -36,14 +36,24 @@ test('포도알 기준: 8문제 중 6개 이상', () => {
   apply(d, 'finishRound', { roundId: 'r4', date: TODAY, subject: 'han', kind: 'quiz', right: 8, total: 8, stars: 8, review: true }, NOW);
   assert.equal(d.lastRound.award, 'none'); // 복습판은 포도알 없음
 });
-test('다시 풀기 목록: 틀리면 올라가고 맞히면 내려간다', () => {
+test('틀린 문제 줄: 틀리면 줄에 서고, 한 번 맞히면 빠진다', () => {
   const d = fam();
   apply(d, 'finishRound', { date: TODAY, subject: 'times', kind: 'tquiz', right: 6, total: 8, stars: 6, missed: ['7×8', '6×9'] }, NOW);
-  apply(d, 'finishRound', { date: TODAY, subject: 'times', kind: 'tquiz', right: 7, total: 8, stars: 7, missed: ['7×8'] }, NOW);
-  assert.deepEqual([d.review.tquiz['7×8'].n, d.review.tquiz['7×8'].t], [2, 2]);
-  apply(d, 'finishRound', { date: TODAY, kind: 'tquiz', right: 2, total: 2, stars: 2, review: true, tally: { times: [2, 2] }, fixed: [{ kind: 'tquiz', key: '7×8' }, { kind: 'tquiz', key: '6×9' }] }, NOW);
-  assert.equal(d.review.tquiz['7×8'].n, 1); assert.equal(d.review.tquiz['6×9'].n, 0); assert.equal(d.review.tquiz['6×9'].t, 1);
+  apply(d, 'finishRound', { date: TODAY, subject: 'times', kind: 'tquiz', right: 7, total: 8, stars: 7, missed: ['7×8'] }, NOW + 1000);
+  assert.deepEqual(d.review.tquiz['7×8'], { n: 1, t: 2, at: NOW }); assert.equal(d.review.tquiz['6×9'].at, NOW + 1); // 같은 판은 푼 순서대로 // 또 틀려도 줄 선 때는 그대로(앞자리 유지)
+  apply(d, 'finishRound', { date: TODAY, subject: 'times', kind: 'tquiz', right: 8, total: 8, stars: 8, fixed: [{ kind: 'tquiz', key: '6×9' }] }, NOW);
+  assert.equal(d.review.tquiz['6×9'], undefined); assert.equal(d.review.tquiz['7×8'].n, 1);
+  // 예전 기록(n 2~3, n 0)도 읽히고, 한 번 맞히면 빠진다
+  d.review.tquiz['3×4'] = { n: 3, t: 3, at: 1 };
+  apply(d, 'finishRound', { date: TODAY, subject: 'times', kind: 'tquiz', right: 8, total: 8, stars: 8, fixed: ['3×4'] }, NOW);
+  assert.equal(d.review.tquiz['3×4'], undefined);
   assert.throws(() => apply(d, 'finishRound', { date: '1999-01-01', right: 1, total: 1 }, NOW));
+});
+test('틀린 문제 줄: 너무 많으면 줄 선 것·오래된 것을 남긴다', () => {
+  const d = fam();
+  for (let i = 0; i < 45; i++) apply(d, 'finishRound', { date: TODAY, subject: 'math', kind: 'add20', right: 0, total: 1, stars: 0, missed: [`${i}+9`] }, NOW + i);
+  const keys = Object.keys(d.review.add20);
+  assert.equal(keys.length, 40); assert.ok(keys.includes('0+9')); assert.ok(!keys.includes('44+9'));
 });
 test('입력 범위 제한', () => {
   const d = fam();
