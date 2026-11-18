@@ -22,7 +22,7 @@ main.wrap{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
 .hub{display:grid;grid-template-columns:1fr;gap:14px}
 @media (min-width:700px){.hub{grid-template-columns:1fr 1fr 1fr}}
 .gcard{border:1px solid var(--hair);border-radius:var(--r);background:var(--card);box-shadow:var(--shadow);overflow:hidden;padding:0;text-align:left;display:flex;flex-direction:column}
-.gcard .art{height:130px;display:grid;place-items:center;font-size:56px}
+.gcard .art{height:150px;display:grid;place-items:center;font-size:56px;text-shadow:0 4px 14px rgba(0,0,0,.35)}
 .gcard b{display:block;font-family:var(--f-display);font-weight:400;font-size:20px;padding:12px 14px 0}
 .gcard span{display:block;color:var(--muted);font-size:15px;padding:2px 14px 14px}
 .gcard:active{transform:translateY(1px);box-shadow:var(--shadow-sm)}
@@ -913,12 +913,12 @@ function rankBar(){const r=rankOf(),k=keysNow();
 function renderHub(){
   app.innerHTML=`${topbar('놀이터')}${rankBar()}
   <div class="hub">
-    <button class="gcard" data-go="runway"><span class="art" style="background:#14171D">🛫</span><b>활주로 이착륙</b><span>조종석에 앉아 출력 레버를 밀고, 조종간을 당겨 이륙해요.</span></button>
-    <button class="gcard" data-go="trip"><span class="art" style="background:#FFC72C">✈️</span><b>${kidName()}항공 여행</b><span>인천에서 이륙해 세계 ${DESTS.length}개 도시로! 열쇠를 모으면 새 나라가 열려요.</span></button>
+    <button class="gcard" data-go="runway"><span class="art" style="background:url(/img/airport-day.webp) center bottom/100% auto no-repeat,url(/img/sky-day.webp) center/cover">🛫</span><b>활주로 이착륙</b><span>조종석에 앉아 출력 레버를 밀고, 조종간을 당겨 이륙해요.</span></button>
+    <button class="gcard" data-go="trip"><span class="art" style="background:url(/img/plane.webp) center 48%/62% auto no-repeat,url(/img/cruise.webp) center/cover"></span><b>${kidName()}항공 여행</b><span>인천에서 이륙해 세계 ${DESTS.length}개 도시로! 열쇠를 모으면 새 나라가 열려요.</span></button>
     <a class="gcard" href="/race.html" style="text-decoration:none;color:inherit"><span class="art" style="background:#C4553F url(/img/stadium.webp) center 35%/cover">🏃</span><b>가족 달리기</b><span>버튼을 타다닥! 엄마·아빠 폰과 같이, 또는 거북·토끼·치타와 시합해요.</span></a>
-    <button class="gcard" data-go="map"><span class="art" style="background:#9ED3F5">🌍</span><b>세계 시계 지도</b><span>미국은 지금 몇 시? 낮인 나라, 밤인 나라를 찾아봐요.</span></button>
-    <button class="gcard" data-go="quiz"><span class="art" style="background:#B48AF0">❓</span><b>지도 퀴즈</b><span>밤인 도시 찾기, 시차 맞히기, 국기 맞히기!${T.travel.best.quiz?` 최고 ${T.travel.best.quiz}점`:''}</span></button>
-    <button class="gcard" data-go="passport"><span class="art" style="background:#F5B0C0">🛂</span><b>내 여권</b><span>${T.travel.stamps.length?`도장 ${T.travel.stamps.length}개 · 여행 별 ⭐ ${T.travel.stars}`:'여행을 다녀오면 도장이 찍혀요.'}</span></button>
+    <button class="gcard" data-go="map"><span class="art" style="background:url(/img/clouds.webp) center bottom/100% auto no-repeat,url(/img/sky-night.webp) center/cover">🌍</span><b>세계 시계 지도</b><span>미국은 지금 몇 시? 낮인 나라, 밤인 나라를 찾아봐요.</span></button>
+    <button class="gcard" data-go="quiz"><span class="art" style="background:url(/img/clouds.webp) center bottom/100% auto no-repeat,url(/img/sky-day.webp) center 30%/cover">❓</span><b>지도 퀴즈</b><span>밤인 도시 찾기, 시차 맞히기, 국기 맞히기!${T.travel.best.quiz?` 최고 ${T.travel.best.quiz}점`:''}</span></button>
+    <button class="gcard" data-go="passport"><span class="art" style="background:url(/img/airport-night.webp) center bottom/100% auto no-repeat,url(/img/sky-night.webp) center 70%/cover">🛂</span><b>내 여권</b><span>${T.travel.stamps.length?`도장 ${T.travel.stamps.length}개 · 여행 별 ⭐ ${T.travel.stars}`:'여행을 다녀오면 도장이 찍혀요.'}</span></button>
   </div>
   <p class="helptxt">🔑 열쇠: 공부방 포도알 1알 = 열쇠 1개, 놀이에서 모은 여행 별 30개 = 열쇠 1개. ${T.online?'기록은 가족 모두의 기기에 같이 저장돼요.':'가족 코드가 없어서 이 기기에만 저장돼요.'}</p>`;
   $$('[data-go]').forEach(b=>b.onclick=()=>{Sfx.click();go(b.dataset.go)});

@@ -484,11 +484,11 @@ function renderNotes(){
 /* 놀이터 */
 function renderPlay(){
   let pp=[];try{pp=JSON.parse(ls.get('sy-passport'))||[]}catch(e){}
-  const G=[['map','#9ED3F5','🌍','세계 시계 지도','미국은 지금 몇 시? 프랑스는? 낮인 나라와 밤인 나라를 찾아봐요.'],
-    ['runway','#14171D','🛫','활주로 이착륙','출력을 올려 이륙하고, 착륙 안내등을 보며 사뿐히 내려요.'],
-    ['trip','#FFC72C','✈️','세윤항공 여행','인천에서 이륙해 도쿄·파리·뉴욕·시드니로 날아가요.'],
-    ['race','#C4553F','🏃','가족 달리기','버튼을 타다닥! 가족 기기 여러 대로 같이 달리거나 컴퓨터 친구와 시합해요.'],
-    ['passport','#F5B0C0','🛂',`내 여권`,pp.length?`여행 도장 ${pp.length}개를 모았어요.`:'여행을 다녀오면 도장이 찍혀요.']];
+  const G=[['map','url(/img/clouds.webp) center bottom/100% auto no-repeat,url(/img/sky-night.webp) center/cover','🌍','세계 시계 지도','미국은 지금 몇 시? 프랑스는? 낮인 나라와 밤인 나라를 찾아봐요.'],
+    ['runway','url(/img/airport-day.webp) center bottom/100% auto no-repeat,url(/img/sky-day.webp) center/cover','🛫','활주로 이착륙','출력을 올려 이륙하고, 착륙 안내등을 보며 사뿐히 내려요.'],
+    ['trip','url(/img/plane.webp) center 48%/62% auto no-repeat,url(/img/cruise.webp) center/cover','','세윤항공 여행','인천에서 이륙해 도쿄·파리·뉴욕·시드니로 날아가요.'],
+    ['race','#C4553F url(/img/stadium.webp) center 35%/cover','🏃','가족 달리기','버튼을 타다닥! 가족 기기 여러 대로 같이 달리거나 컴퓨터 친구와 시합해요.'],
+    ['passport','url(/img/airport-night.webp) center bottom/100% auto no-repeat,url(/img/sky-night.webp) center 70%/cover','🛂',`내 여권`,pp.length?`여행 도장 ${pp.length}개를 모았어요.`:'여행을 다녀오면 도장이 찍혀요.']];
   app.innerHTML=G.map(([k,bg,e,t,s])=>`<a class="playcard" href="${k==='race'?'/race.html':'/games.html#'+k}"><span class="art" style="background:${bg}">${e}</span><span class="tx"><b>${t}</b><small>${s}</small></span><span class="go">›</span></a>`).join('')
     +`<p style="color:var(--muted);font-size:14px;margin:4px 2px 0">여권 도장과 여행 별은 가족 보드에 저장돼서 다른 기기에서도 이어져요.</p>`;
 }
