@@ -1,0 +1,13 @@
+# 가족 달리기 실시간 방 (Durable Object). 이 폴더에서: npx wrangler deploy
+name = "urijip-race"
+main = "index.mjs"
+compatibility_date = "2026-10-01"
+
+[[durable_objects.bindings]]
+name = "RACE"
+class_name = "RaceRoom"
+
+# 무료 요금제는 SQLite 저장소를 쓰는 Durable Object만 만들 수 있어요
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["RaceRoom"]

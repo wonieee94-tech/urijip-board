@@ -1,0 +1,22 @@
+# Cloudflare Pages 응답 머리말 (https://developers.cloudflare.com/pages/configuration/headers/)
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; media-src 'self' data: blob:; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'
+
+/sw.js
+  Cache-Control: no-cache
+
+/api/*
+  Cache-Control: no-store
+
+/fonts/*
+  Cache-Control: public, max-age=604800
+
+/world-map.js
+  Cache-Control: public, max-age=86400
+
+/img/*
+  Cache-Control: public, max-age=604800

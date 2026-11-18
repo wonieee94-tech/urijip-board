@@ -393,3 +393,61 @@ button.tile:active{transform:translateY(1px);box-shadow:var(--shadow-sm)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
 .bigstudy.play{background:#14171D;color:#FFC72C;background-image:none}
+
+/* 부모 PIN 숫자판 */
+.pinlock{position:fixed;inset:0;z-index:60;background:rgba(10,14,22,.62);display:grid;place-items:center;padding:16px;backdrop-filter:blur(3px)}
+.pinbox{background:var(--card);color:var(--ink);border-radius:24px;box-shadow:var(--shadow);padding:20px 18px;width:min(340px,100%);text-align:center}
+.pinbox h2{font-family:var(--f-head);font-weight:400;font-size:24px;margin:2px 0}
+.pin-ic{font-size:34px}
+.pin-sub{color:var(--muted);margin:2px 0 8px;font-size:15px}
+.pin-dots{display:flex;justify-content:center;gap:10px;margin:6px 0}
+.pin-dots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink)}
+.pin-dots i.opt{opacity:.35}
+.pin-dots i.on{background:var(--ink);opacity:1}
+.pin-err{min-height:1.4em;color:var(--warm);font-size:14px;margin:0}
+.pin-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:6px 0 12px}
+.pin-keys button{min-height:58px;border-radius:16px;border:1.5px solid var(--hair);background:var(--paper,#fff);color:var(--ink);font-family:var(--f-display);font-size:26px}
+.pin-keys button.sm{font-family:var(--f-body);font-size:16px}
+.pin-keys button:active{transform:translateY(1px);filter:brightness(.94)}
+.pinbox .btn[disabled]{opacity:.45}
+
+/* 공부 리포트 */
+.report h4{font-family:var(--f-body);font-size:16px;margin:16px 0 6px}
+.report h4 small{color:var(--muted);font-weight:400;margin-left:6px;font-size:13px}
+.rep-top{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.rep-top div{border:2px solid var(--line);border-radius:14px;padding:8px 4px}
+.rep-top div.met{border-color:var(--grape,#7B3FB8);background:var(--grape-soft,#EEE3FA)}
+.rep-top b{display:block;font-family:var(--f-display);font-weight:400;font-size:24px}
+.rep-top small{color:var(--muted);font-size:13px}
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center;align-items:end}
+.dbar{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:13px}
+.dbar .bb{width:70%;height:70px;background:var(--sunk);border:1px solid var(--hair);margin:0;border-radius:8px;display:flex;align-items:flex-end;overflow:hidden}
+.dbar .bb i{display:block;width:100%;background:var(--star,#E9A821);border-radius:8px 8px 0 0;min-height:2px}
+.dbar .bv{min-height:1.2em;font-weight:700}.dbar small{color:var(--muted);font-size:11px}
+
+/* 떠 있는 시트: 휴대폰은 아래에서 올라오고, 넓은 화면은 가운데 창 */
+.sheet{position:fixed;inset:0;z-index:50;background:rgba(10,14,22,.5);display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(2px);opacity:0;transition:opacity .18s}
+.sheet.show{opacity:1}
+.sheet-card{background:var(--card);color:var(--ink);width:min(560px,100%);max-height:calc(100dvh - 24px - env(safe-area-inset-top,0px));overflow:auto;overscroll-behavior:contain;
+  border-radius:24px 24px 0 0;box-shadow:var(--shadow);transform:translateY(24px);transition:transform .22s cubic-bezier(.2,.9,.3,1);
+  padding:8px max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
+.sheet.show .sheet-card{transform:none}
+.sheet-grab{display:block;width:44px;height:5px;border-radius:9px;background:var(--hair,#ccd);margin:2px auto 8px}
+.sheet-head{display:flex;align-items:center;gap:8px;position:sticky;top:-8px;background:var(--card);padding:4px 0 8px;z-index:1}
+.sheet-head h3{flex:1;margin:0;font-size:21px}
+.sheet-head .x{border:1px solid var(--hair,#ccd);background:var(--card);border-radius:12px;min-width:40px;min-height:40px;color:var(--muted)}
+.sheet-foot{display:flex;gap:10px;margin-top:16px;position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom,0px));background:var(--card);padding:10px 0 4px}
+.sheet-foot .btn{flex:1}.sheet-foot .btn.primary{flex:2}
+.sheet-list{background-image:none}
+.sheet-list .item:last-child{border-bottom:0}
+body.sheet-open{overflow:hidden}
+body.sheet-open .toast{z-index:55;pointer-events:none;bottom:auto;top:calc(14px + env(safe-area-inset-top,0px))}
+@media (min-width:700px){.sheet{align-items:center;padding:24px}.sheet-card{border-radius:24px}}
+@media (prefers-reduced-motion:reduce){.sheet,.sheet-card{transition:none}}
+.item .acts{margin-left:auto;display:flex;gap:6px}.item .acts .x{margin-left:0}
+.calhint{color:var(--muted);font-size:14px;margin:10px 2px 0;text-align:center}
+.cardhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}.cardhead h3{flex:1;margin:0}
+.addbtn{width:42px;height:42px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:24px;font-weight:700;line-height:1;display:grid;place-items:center;box-shadow:var(--shadow-sm)}
+.fab{position:fixed;z-index:25;right:max(18px,env(safe-area-inset-right,0px));bottom:calc(var(--nav) + 26px + env(safe-area-inset-bottom,0px));
+  width:58px;height:58px;border-radius:50%;border:0;background:var(--accent);color:var(--accent-ink);font-size:30px;font-weight:700;display:grid;place-items:center;box-shadow:var(--shadow)}
+.fab:active,.addbtn:active{transform:scale(.94)}
