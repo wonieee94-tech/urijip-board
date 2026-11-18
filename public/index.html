@@ -33,8 +33,10 @@
   <button data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M5.5 18.5l1.8-1.8M16.7 7.3l1.8-1.8"/></svg>설정</button>
 </div></nav>
 <div class="toast" id="toast" hidden></div>
+<div class="pinlock" id="pinlock" hidden></div>
 
 <script src="/grapes.js"></script>
+<script src="/progress.js"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const app=$('#app');
@@ -57,15 +59,52 @@ let calMonth=null, selDay=ymd(new Date()), editStatus=null, lastErr='';
 function toast(msg){const t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2200)}
 
 /* ---------- 서버 ---------- */
-async function call(op,p){
-  const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:CODE,op,p})});
+async function call(op,p,pin){
+  const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:CODE,op,p,pin})});
   const data=await r.json().catch(()=>({error:'서버 응답을 읽지 못했어요'}));
   if(!r.ok)throw new Error(data.error||'저장하지 못했어요');
   return data;
 }
-async function act(op,p,msg){
-  try{DOC=await call(op,p);render();if(msg)toast(msg)}
+async function act(op,p,msg,pin){
+  try{DOC=await call(op,p,pin);render();if(msg)toast(msg)}
   catch(e){toast(e.message)}
+}
+
+/* ---------- 부모 PIN ---------- */
+// 잠금을 풀면 이 탭에서 10분 동안 어른 화면·설정을 쓸 수 있다. PIN 숫자는 기기에 저장하지 않고 메모리에만 둔다.
+let PIN=null,PIN_AT=0;
+const unlocked=()=>!DOC?.hasPin||(PIN&&Date.now()-PIN_AT<10*60e3);
+function lockNow(){PIN=null;PIN_AT=0}
+function pinPad(title,sub){
+  return new Promise(resolve=>{
+    const el=$('#pinlock');let v='';
+    const draw=(err='')=>{el.innerHTML=`<div class="pinbox" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+      <div class="pin-ic">🔒</div><h2>${esc(title)}</h2><p class="pin-sub">${esc(sub||'')}</p>
+      <div class="pin-dots" aria-live="polite">${[0,1,2,3,4,5].map(i=>`<i class="${i<v.length?'on':''}${i>=4?' opt':''}"></i>`).join('')}</div>
+      <p class="pin-err" role="alert">${esc(err)}</p>
+      <div class="pin-keys">${[1,2,3,4,5,6,7,8,9].map(n=>`<button data-k="${n}">${n}</button>`).join('')}<button data-k="x" aria-label="취소" class="sm">취소</button><button data-k="0">0</button><button data-k="b" aria-label="지우기" class="sm">⌫</button></div>
+      <button class="btn primary block" id="pinOk" ${v.length<4?'disabled':''}>확인</button></div>`};
+    const close=val=>{el.hidden=true;el.innerHTML='';document.removeEventListener('keydown',kd);resolve(val)};
+    const press=async k=>{
+      if(k==='x')return close(null);
+      if(k==='b'){v=v.slice(0,-1);return draw()}
+      if(k==='ok'){if(v.length>=4)close(v);return}
+      if(/^\d$/.test(k)&&v.length<6){v+=k;draw();try{navigator.vibrate?.(8)}catch(e){}}
+    };
+    const kd=e=>{if(/^\d$/.test(e.key))press(e.key);else if(e.key==='Backspace')press('b');else if(e.key==='Enter')press('ok');else if(e.key==='Escape')press('x')};
+    el.onclick=e=>{const b=e.target.closest('[data-k]');if(b)press(b.dataset.k);else if(e.target.id==='pinOk')press('ok')};
+    document.addEventListener('keydown',kd);
+    el.hidden=false;draw();el.showErr=msg=>{v='';draw(msg)};
+  });
+}
+// PIN이 없으면 바로 통과. 있으면 숫자판을 띄우고 서버에서 맞는지 확인한다.
+async function pinGate(title='어른 확인',sub='부모 PIN을 눌러 주세요'){
+  if(unlocked())return true;
+  for(;;){
+    const v=await pinPad(title,sub);if(v==null)return false;
+    try{await call('checkPin',{},v);PIN=v;PIN_AT=Date.now();return true}
+    catch(e){toast(e.message);sub=e.message}
+  }
 }
 async function load(quiet){
   if(!CODE)return;
@@ -124,8 +163,10 @@ function render(){
   ({today:renderToday,plan:renderPlan,routine:renderRoutine,notes:renderNotes,study:renderStudy,play:renderPlay,settings:renderSettings})[TAB]();
   if(lastErr)app.insertAdjacentHTML('afterbegin',`<p class="card" style="color:var(--warm)">${lastErr}</p>`);
 }
-$('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(!b)return;TAB=b.dataset.tab;ls.set('hb-tab',TAB);editStatus=null;render();window.scrollTo(0,0)};
-$('#kidBtn').onclick=()=>{KID=true;ls.set('hb-kid','1');render();window.scrollTo(0,0)};
+$('#tabs').onclick=async e=>{const b=e.target.closest('[data-tab]');if(!b)return;
+  if(b.dataset.tab==='settings'&&!unlocked()&&!(await pinGate('설정 열기')))return;
+  TAB=b.dataset.tab;ls.set('hb-tab',TAB);editStatus=null;render();window.scrollTo(0,0)};
+$('#kidBtn').onclick=()=>{KID=true;ls.set('hb-kid','1');lockNow();render();window.scrollTo(0,0)};
 
 /* 처음 화면 */
 function renderStart(){
@@ -138,7 +179,10 @@ function renderStart(){
     <p style="margin-top:14px"><button class="btn primary block" id="sCreate">우리집 보드 만들기</button></p></div>
   <div class="card"><h3>가족이 이미 만들었어요</h3>
     <p class="sub" style="color:var(--muted);margin:0 0 8px">가족에게 받은 코드를 넣어 주세요.</p>
-    <div class="row"><input class="input grow" id="jCode" placeholder="ABCD-1234" maxlength="9" autocapitalize="characters" autocomplete="off"><button class="btn primary" id="jGo">들어가기</button></div></div>`;
+    <div class="row"><input class="input grow" id="jCode" placeholder="ABCD-1234" maxlength="9" autocapitalize="characters" autocomplete="off"><button class="btn primary" id="jGo">들어가기</button></div></div>
+  <details class="card"><summary><b>지운 보드 되살리기</b> <small style="color:var(--muted)">(지운 뒤 30일까지)</small></summary>
+    <div class="row" style="margin-top:10px"><input class="input grow" id="rCode" placeholder="ABCD-1234" maxlength="9" autocapitalize="characters" autocomplete="off" value="${esc(ls.get('hb-last-deleted')||'')}"><button class="btn" id="rGo">되살리기</button></div>
+    <p style="color:var(--muted);font-size:14px;margin:8px 0 0">PIN을 정해 두었던 보드는 PIN을 물어봐요.</p></details>`;
   const mem=[{name:'엄마',emoji:'👩',role:'adult'},{name:'아빠',emoji:'👨',role:'adult'},{name:'세윤',emoji:'🧒',role:'child'}];
   const draw=()=>{$('#sMembers').innerHTML=mem.map((m,i)=>`<button class="chip on" data-i="${i}">${m.emoji} ${esc(m.name)} ✕</button>`).join('')};
   draw();
@@ -150,6 +194,13 @@ function renderStart(){
       CODE=data.code;DOC=data.doc;ls.set('hb-code',CODE);TAB='today';render();toast('우리집 보드를 만들었어요');
     }catch(e){toast(e.message||'만들지 못했어요')}};
   $('#jGo').onclick=()=>join($('#jCode').value);
+  $('#rGo').onclick=async()=>{const c=String($('#rCode').value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length!==8)return toast('코드는 8자리예요');
+    const code=c.slice(0,4)+'-'+c.slice(4);
+    const tryRestore=async pin=>{const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code,op:'restoreFamily',pin})});return{r,d:await r.json()}};
+    try{let{r,d}=await tryRestore();
+      if(r.status===403){const pin=await pinPad('PIN 확인','이 보드의 부모 PIN을 눌러 주세요');if(pin==null)return;({r,d}=await tryRestore(pin))}
+      if(!r.ok)throw new Error(d.error);
+      CODE=code;DOC=d;ls.set('hb-code',CODE);ls.set('hb-last-deleted',null);TAB='today';render();toast('우리집 보드를 되살렸어요')}catch(e){toast(e.message)}};
 }
 async function join(raw){
   const c=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -381,26 +432,49 @@ function renderStudy(){
     <label class="l" for="gift">다 채우면 받을 선물</label>
     <div class="row"><input class="input grow" id="gift" value="${esc(S.gift)}" placeholder="예: 레고 자동차" maxlength="30"><button class="btn primary" id="giftSave">정하기</button></div>
     ${full?'<p style="margin-top:12px"><button class="btn warn block" id="claim">🎁 선물 줬어요 · 새 포도송이 시작</button></p>':''}
-    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">한글, 셈하기, 구구단, 파닉스를 한 판씩 끝까지 풀면 과목마다 하루에 한 알씩 붙어요. 하루에 최대 4알이에요.</p>
+    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">한글, 셈하기, 구구단, 파닉스를 한 판(8문제)에서 6개 이상 맞히면 과목마다 하루에 한 알씩 붙어요. 하루에 최대 4알이에요.</p>
     ${S.history.length?`<p style="color:var(--muted);font-size:14px;margin:6px 0 0">지금까지 받은 선물: ${S.history.map(h=>esc(h.gift||'선물')).join(', ')}</p>`:''}</div>
-  <div class="card"><h3>이번 주 모은 별 ★ ${total}</h3>
-    <div class="week">${days.map(x=>`<div><span>${WD[x.d.getDay()]}</span><b>${DOC.study[x.s]||0}</b></div>`).join('')}</div>
-    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">공부방에서 문제를 맞히거나 받아쓰기를 잘하면 별이 쌓여요. 가족 모두의 화면에 같이 보여요.</p></div>
+  ${studyReport(days,total)}
   <div class="card"><h3>공부방에 있는 것</h3>
     <div class="item"><span style="font-size:26px">가</span><div class="grow"><b>한글</b><div class="sub">받침 이사(연음) 원리, 받침 탐정, ㅔ와 ㅐ, 받아쓰기</div></div></div>
     <div class="item"><span style="font-size:26px">➕</span><div class="grow"><b>덧셈 · 뺄셈</b><div class="sub">10칸 상자로 세기, 10 만들기 받아올림·받아내림</div></div></div>
     <div class="item"><span style="font-size:26px">✖️</span><div class="grow"><b>구구단</b><div class="sub">묶음으로 보는 곱셈, 단별 퀴즈</div></div></div>
     <div class="item"><span style="font-size:26px">🔤</span><div class="grow"><b>파닉스</b><div class="sub">알파벳 소리, 첫소리 찾기, 세 글자 낱말 만들기</div></div></div></div>`;
   $('#giftSave').onclick=()=>act('setGift',{gift:$('#gift').value},'선물을 정했어요');
+  $$('#goalChips [data-g]').forEach(b=>b.onclick=()=>act('setGoal',{subjects:+b.dataset.g},'오늘 목표를 바꿨어요'));
   if(full)$('#claim').onclick=()=>{if(confirm('선물을 줬나요? 포도송이를 비우고 새로 시작해요.'))act('claimGift',{},'새 포도송이를 시작해요')};
 }
 const stickers=()=>DOC.stickers||{board:[],gift:'',history:[]};
+// 공부 리포트: 연속 공부, 오늘 목표, 과목별 정답률, 최근 7일, 자주 틀리는 문제
+function studyReport(days,total){
+  const P=Progress,sk=P.streak(DOC),done=P.doneToday(DOC),goal=DOC.goal?.subjects||2,learn=DOC.learn||{};
+  const acc={};for(const x of days)for(const[k,v]of Object.entries(learn[x.s]||{})){const a=(acc[k]||={r:0,t:0,n:0});a.r+=v.r;a.t+=v.t;a.n+=v.n}
+  const subj=Object.entries(Grapes.SUBJ).map(([k,v])=>{const a=acc[k],pct=a&&a.t?Math.round(a.r/a.t*100):null;
+    return `<div class="acc"><span class="an">${v.mark} ${v.name}</span><span class="ab"><i class="${pct==null?'':pct>=75?'good':pct>=50?'mid':'low'}" style="width:${pct||0}%"></i></span>
+      <span class="av">${pct==null?'<small>아직 안 했어요</small>':`<b>${pct}%</b><small>${a.r}/${a.t} · ${a.n}판</small>`}</span></div>`}).join('');
+  const maxS=Math.max(5,...days.map(x=>DOC.study[x.s]||0));
+  const bars=days.map(x=>{const n=DOC.study[x.s]||0,rounds=Object.values(learn[x.s]||{}).reduce((a,v)=>a+v.n,0);
+    return `<div class="bar"><span class="bv">${n||''}</span><span class="bb"><i style="height:${Math.round(n/maxS*100)}%"></i></span><span class="bd">${WD[x.d.getDay()]}</span><small>${rounds?rounds+'판':'-'}</small></div>`}).join('');
+  const miss=P.reviewList(DOC).filter(x=>x.t>0).sort((a,b)=>b.t-a.t||b.n-a.n).slice(0,8);
+  const waiting=P.reviewList(DOC).filter(x=>x.n>0).length;
+  return `<div class="card report"><h3>📊 ${esc(childName())} 공부 리포트</h3>
+    <div class="rep-top"><div><b>🔥 ${sk}일</b><small>연속 공부</small></div><div class="${done.length>=goal?'met':''}"><b>${Math.min(done.length,4)}/${goal}</b><small>오늘 목표 과목</small></div><div><b>★ ${total}</b><small>이번 주 별</small></div></div>
+    <h4>과목별 정답률 <small>최근 7일</small></h4>${subj}
+    <h4>최근 7일 <small>별 · 푼 판 수</small></h4><div class="bars">${bars}</div>
+    <h4>자주 틀리는 문제 <small>${waiting?`다시 풀기 ${waiting}개 대기 중`:'다시 풀 문제 없음'}</small></h4>
+    ${miss.length?`<ul class="misslist">${miss.map(x=>`<li><span class="mk">${esc(P.KIND[x.kind]||x.kind)}</span><b>${esc(x.key)}</b><small>${x.t}번 틀림${x.n>0?' · 다시 풀기 대기':' · 다시 맞힘 ✓'}</small></li>`).join('')}</ul>`:'<p class="empty" style="padding:4px">아직 틀린 문제가 없어요.</p>'}
+    <h4>오늘 목표</h4><div class="chips" id="goalChips">${[1,2,3,4].map(n=>`<button class="chip${n===goal?' on':''}" data-g="${n}">과목 ${n}개</button>`).join('')}</div>
+    <p style="color:var(--muted);font-size:14px;margin:10px 0 0">공부방 첫 화면에 오늘 목표와 연속 공부 날이 보여요. 틀린 문제는 공부방의 ‘다시 풀기’에 모여요. 가족 모두의 화면에 같이 보여요.</p></div>`;
+}
 function todayStickers(){const day=ymd(new Date()),b=stickers().board;
   return `<div class="today4" style="margin-bottom:8px">${Object.entries(Grapes.SUBJ).map(([k,v])=>{const got=b.some(x=>x.date===day&&x.subject===k);return`<div class="${got?'got':''}"><b>${got?'🍇':v.mark}</b>${v.name}</div>`}).join('')}</div>`}
 
 /* 설정 */
 const M_EMO=['👩','👨','🧒','👧','👦','👶','👵','👴','🙂','🐶','🐱'];
 function renderSettings(){
+  if(!unlocked()){app.innerHTML=`<div class="card" style="text-align:center"><div style="font-size:44px">🔒</div><h3>설정은 잠겨 있어요</h3>
+    <p style="color:var(--muted)">부모 PIN을 누르면 열려요.</p><button class="btn primary block" id="unlock">잠금 풀기</button></div>`;
+    $('#unlock').onclick=async()=>{if(await pinGate('설정 열기'))render()};return}
   const link=location.origin+'/?join='+CODE;
   app.innerHTML=`
   <div class="card"><h3>화면 배경</h3><p style="color:var(--muted);margin:0 0 12px">가족 모두의 화면과 공부방이 같이 바뀌어요. 밤에는 눈부시지 않게 어두운 화면이 돼요.</p>
@@ -412,6 +486,11 @@ function renderSettings(){
       <div style="display:flex;flex-direction:column;gap:6px"><button class="btn sm" data-save>저장</button><button class="btn sm" data-del>빼기</button></div></div>`).join('')}
     <h3 style="margin-top:14px">가족 더하기</h3>
     <div class="row"><select class="input" id="aEmo" style="width:76px;padding:8px" aria-label="얼굴">${M_EMO.map(e=>`<option>${e}</option>`).join('')}</select><input class="input grow" id="aName" placeholder="예: 할머니" maxlength="12"><button class="btn" id="aAdd">추가</button></div></div>
+  <div class="card" id="pinCard"><h3>🔒 부모 PIN</h3>
+    ${DOC.hasPin?`<p style="color:var(--muted);margin:0 0 10px">PIN이 켜져 있어요. 아이 보드에서 어른 화면으로 갈 때, 설정을 열 때, 가족을 빼거나 보드를 지울 때 물어봐요.</p>
+      <div class="row"><button class="btn" id="pinChange">PIN 바꾸기</button><button class="btn" id="pinOff">PIN 끄기</button><button class="btn" id="pinLock">지금 잠그기</button></div>`
+    :`<p style="color:var(--warm);margin:0 0 10px"><b>아직 PIN이 없어요.</b> 숫자 4~6자리를 정하면 아이가 어른 화면·설정·지우기를 열 수 없어요.</p>
+      <button class="btn primary block" id="pinSet">부모 PIN 정하기</button>`}</div>
   <div class="card"><h3>가족 코드</h3><div class="code">${CODE}</div>
     <p style="color:var(--muted);font-size:15px">이 코드나 링크를 받은 사람은 우리집 보드를 보고 고칠 수 있어요. 가족에게만 보내 주세요.</p>
     <button class="btn primary block" id="share">가족에게 링크 보내기</button></div>
@@ -421,20 +500,27 @@ function renderSettings(){
     <p style="color:var(--muted)">거실 태블릿에는 ${esc(childName())} 보드를 켜 두면 좋아요. 화면이 꺼지지 않게 하려면 기기 설정에서 자동 잠금(화면 꺼짐) 시간을 길게 해 주세요.</p></div>
   <div class="card"><h3>이 기기에서 나가기</h3><p style="color:var(--muted)">이 기기에서만 나가요. 우리집 보드는 그대로 있고 코드로 다시 들어올 수 있어요.</p>
     <button class="btn block" id="leave">이 기기에서 나가기</button></div>
-  <div class="card"><h3>우리집 보드 지우기</h3><p style="color:var(--muted)">일정, 루틴, 한마디, 공부 기록이 <b>모두 지워지고 되돌릴 수 없어요.</b> 가족 모두의 기기에서 사라져요.</p>
+  <div class="card"><h3>우리집 보드 지우기</h3><p style="color:var(--muted)">일정, 루틴, 한마디, 공부 기록이 가족 모두의 기기에서 사라져요. <b>30일 안에는</b> 처음 화면의 ‘지운 보드 되살리기’에서 가족 코드${DOC.hasPin?'와 PIN':''}으로 되살릴 수 있고, 그 뒤에는 완전히 지워져요.</p>
     <button class="btn warn block" id="wipe">우리집 보드 지우기</button></div>`;
   $$('[data-skin-pick]').forEach(b=>b.onclick=()=>{applySkin(b.dataset.skinPick);act('setSkin',{skin:b.dataset.skinPick},'배경을 바꿨어요')});
   $('#fSave').onclick=()=>act('setName',{name:$('#fName').value},'저장했어요');
+  const newPin=async()=>{const a=await pinPad('새 PIN','숫자 4~6자리를 눌러 주세요');if(a==null)return null;
+    const b=await pinPad('한 번 더','같은 PIN을 다시 눌러 주세요');if(b==null)return null;if(a!==b){toast('두 번 누른 PIN이 달라요');return null}return a};
+  if($('#pinSet'))$('#pinSet').onclick=async()=>{const v=await newPin();if(!v)return;try{DOC=await call('setPin',{newPin:v});PIN=v;PIN_AT=Date.now();render();toast('부모 PIN을 정했어요')}catch(e){toast(e.message)}};
+  if($('#pinChange'))$('#pinChange').onclick=async()=>{const v=await newPin();if(!v)return;try{DOC=await call('setPin',{newPin:v},PIN);PIN=v;PIN_AT=Date.now();render();toast('PIN을 바꿨어요')}catch(e){toast(e.message)}};
+  if($('#pinOff'))$('#pinOff').onclick=async()=>{if(!confirm('PIN을 끌까요? 아이도 어른 화면과 설정을 열 수 있게 돼요.'))return;try{DOC=await call('clearPin',{},PIN);lockNow();render();toast('PIN을 껐어요')}catch(e){toast(e.message)}};
+  if($('#pinLock'))$('#pinLock').onclick=()=>{lockNow();TAB='today';ls.set('hb-tab',TAB);render();toast('잠갔어요')};
   $$('[data-m]').forEach(row=>{const id=row.dataset.m;
     $('[data-save]',row).onclick=()=>act('updMember',{id,emoji:$('select',row).value,name:$('input.input',row).value,role:$('.isKid',row).checked?'child':'adult'},'저장했어요');
-    $('[data-del]',row).onclick=()=>{if(confirm(`${member(id)?.name}을(를) 가족에서 뺄까요?`))act('delMember',{id},'뺐어요')}});
+    $('[data-del]',row).onclick=()=>{if(confirm(`${member(id)?.name}을(를) 가족에서 뺄까요?`))act('delMember',{id},'뺐어요',PIN)}});
   $('#aAdd').onclick=()=>act('addMember',{emoji:$('#aEmo').value,name:$('#aName').value,role:'adult'},'추가했어요');
   $('#share').onclick=async()=>{const text=`${DOC.name} 보드에 들어와요. 코드: ${CODE}`;
     try{if(navigator.share){await navigator.share({title:DOC.name+' 보드',text,url:link});return}}catch(e){if(e.name==='AbortError')return}
     try{await navigator.clipboard.writeText(text+'\n'+link);toast('링크를 복사했어요')}catch(e){prompt('이 링크를 복사해서 보내 주세요',link)}};
   $('#leave').onclick=()=>{if(!confirm('이 기기에서 나갈까요?'))return;ls.set('hb-code',null);CODE=null;DOC=null;render()};
   $('#wipe').onclick=async()=>{const ok=prompt('정말 지우려면 가족 이름을 그대로 적어 주세요: '+DOC.name);if(ok!==DOC.name){if(ok!==null)toast('이름이 달라서 지우지 않았어요');return}
-    try{await call('deleteFamily');ls.set('hb-code',null);CODE=null;DOC=null;render();toast('우리집 보드를 지웠어요')}catch(e){toast(e.message)}};
+    if(!(await pinGate('보드 지우기','부모 PIN을 눌러 주세요')))return;
+    try{await call('deleteFamily',{},PIN);ls.set('hb-last-deleted',CODE);ls.set('hb-code',null);CODE=null;DOC=null;lockNow();render();toast('지웠어요. 30일 안에는 되살릴 수 있어요')}catch(e){toast(e.message)}};
 }
 
 /* 아이 보드 */
@@ -465,7 +551,8 @@ function renderKid(){
   <div class="card"><h3>엄마 아빠에게 말하기</h3><div class="say">${SAY.map(([e,t])=>`<button data-say="${t}">${e} ${t}</button>`).join('')}</div></div>
   <div class="notes">${DOC.notes.filter(n=>!n.kid).slice(0,2).map(noteItem).join('')}</div>`;
   tick();
-  $('#adultBtn').onclick=()=>{KID=false;ls.set('hb-kid',null);render();window.scrollTo(0,0)};
+  $('#adultBtn').onclick=async()=>{if(!(await pinGate('어른 화면으로 갈게요','부모 PIN을 눌러 주세요')))return;
+    KID=false;ls.set('hb-kid',null);render();window.scrollTo(0,0);if(!DOC.hasPin)toast('설정에서 부모 PIN을 정하면 아이가 어른 화면을 못 열어요')};
   $$('.rbtn').forEach(b=>b.onclick=()=>act('toggleCheck',{date:day,rid:b.dataset.r},b.classList.contains('done')?'':'잘했어요! ✓'));
   $$('[data-say]').forEach(b=>b.onclick=()=>act('addNote',{from:ch?.name||'아이',text:b.dataset.say,kid:true},'엄마 아빠에게 보냈어요'));
 }
