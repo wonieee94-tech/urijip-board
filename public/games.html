@@ -9,6 +9,7 @@
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icon-180.png">
+<meta name="mobile-web-app-capable" content="yes">
 <link rel="stylesheet" href="/app.css">
 <link rel="stylesheet" href="/theme.css">
 <link rel="stylesheet" href="/skins.css">
@@ -67,29 +68,106 @@ main.wrap{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
 .cities button.on{background:var(--sign);color:var(--sign-ink)}
 
 /* 비행 놀이 */
-.stage2{position:relative;border:0;border-radius:var(--r);overflow:hidden;box-shadow:var(--shadow);background:#9FD3FF;touch-action:none;-webkit-user-select:none;user-select:none}
+.stage2{position:relative;border:0;border-radius:var(--r) var(--r) 0 0;overflow:hidden;box-shadow:var(--shadow);background:#9FD3FF;touch-action:none;-webkit-user-select:none;user-select:none}
 .stage2 canvas{display:block;width:100%;height:auto;touch-action:none}
-.hud{position:absolute;left:10px;right:10px;top:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
-.hudbox{background:rgba(20,23,29,.86);color:#EEF1F6;border-radius:10px;padding:6px 10px;font-size:13px;font-weight:700;line-height:1.3}
-.hudbox .v{font-family:var(--f-display);font-size:22px;color:#FFC72C;font-weight:400}
-.gauge{width:120px;height:10px;border-radius:5px;background:#2A303C;position:relative;margin-top:4px;overflow:hidden}
-.gauge i{position:absolute;left:0;top:0;bottom:0;background:#FFC72C}
-.gauge u{position:absolute;top:0;bottom:0;background:rgba(47,191,113,.55)}
-.papi{display:flex;gap:4px;margin-top:4px}
-.papi i{width:14px;height:14px;border-radius:50%;border:1.5px solid #111}
-.papi i.w{background:#fff}.papi i.r{background:#E5322D}
-.prog{width:min(52vw,260px);height:10px;border-radius:5px;background:#2A303C;position:relative;margin-top:4px}
+.hud{position:absolute;left:8px;right:8px;top:8px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none}
+.hudbox{background:rgba(20,23,29,.78);color:#EEF1F6;border-radius:10px;padding:5px 9px;font-size:13px;font-weight:700;line-height:1.3}
+.hudbox .v{font-family:var(--f-display);font-size:20px;color:#FFC72C;font-weight:400}
+.hudbtns{display:flex;gap:6px;pointer-events:auto}
+.hudbtns button{width:40px;height:40px;border-radius:12px;border:0;background:rgba(20,23,29,.78);color:#fff;font-size:18px}
+.prog{width:min(40vw,220px);height:10px;border-radius:5px;background:#2A303C;position:relative;margin-top:4px}
 .prog i{position:absolute;left:0;top:0;bottom:0;background:#FFC72C;border-radius:5px}
-.msg{position:absolute;inset:0;display:grid;place-items:center;background:rgba(20,23,29,.55);text-align:center;padding:16px}
-.msg .box{background:var(--card);color:var(--ink);border:0;border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px;max-width:420px}
-.msg .box h3{font-family:var(--f-display);font-weight:400;font-size:24px;margin-bottom:6px}
-.msg .box p{margin:4px 0 12px}
-.ctrls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-.ctrl{border:0;border-radius:var(--r);background:var(--sign);color:var(--sign-ink);min-height:84px;font-size:20px;font-weight:700;box-shadow:var(--shadow);touch-action:none;-webkit-user-select:none;user-select:none}
-.ctrl.alt{background:var(--card);color:var(--ink);border:1px solid var(--hair)}
-.ctrl.held{transform:translateY(2px);box-shadow:var(--shadow-sm);filter:brightness(.92)}
-.ctrl small{display:block;font-size:13px;font-weight:400;opacity:.8}
+.msg{position:absolute;inset:0;display:flex;overflow-y:auto;overscroll-behavior:contain;background:rgba(20,23,29,.55);text-align:center;padding:12px;z-index:3}
+.msg .box{background:var(--card);color:var(--ink);border:0;border-radius:var(--r);box-shadow:var(--shadow);padding:16px 18px;max-width:420px;width:100%;margin:auto}
+@media(max-width:480px){.msg{padding:8px}.msg .box{padding:10px 12px}.msg .box h3{font-size:20px}.msg .stars3{font-size:26px}.msg .tut-ill{font-size:34px}.msg .box p{margin:2px 0 6px;font-size:14px}.msg .box .btn{padding:9px 14px;font-size:15px}}
+.msg .box h3{font-family:var(--f-display);font-weight:400;font-size:24px;margin-bottom:4px}
+.msg .box p{margin:4px 0 10px}
+.msg .stars3{font-size:34px;letter-spacing:4px;margin:2px 0}
+.msg .stars3 .off{filter:grayscale(1);opacity:.3}
+.msg .tut-ill{font-size:44px;line-height:1.1;margin:4px 0}
+.msg .tut-dots{display:flex;gap:6px;justify-content:center;margin:6px 0 10px}.msg .tut-dots i{width:8px;height:8px;border-radius:50%;background:var(--hair)}.msg .tut-dots i.on{background:var(--warm)}
 .helptxt{color:var(--muted);font-size:15px;margin:10px 2px 0}
+.newbest{display:inline-block;background:var(--sign);color:var(--sign-ink);border-radius:999px;padding:1px 10px;font-weight:700;font-size:14px}
+
+/* 조종석 계기판 */
+.cockpit{display:grid;grid-template-columns:96px 1fr 104px;gap:10px;align-items:stretch;background:linear-gradient(#2A2F3A,#171A21);border-radius:0 0 var(--r) var(--r);box-shadow:var(--shadow);padding:12px 10px 14px;color:#E9EDF5;touch-action:none;-webkit-user-select:none;user-select:none;position:relative}
+.cockpit.auto::after{content:attr(data-auto);position:absolute;inset:0;display:grid;place-items:center;background:rgba(15,18,24,.72);border-radius:0 0 var(--r) var(--r);font-weight:700;font-size:18px;color:#FFC72C}
+.cp-col{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.cp-lbl{font-size:13px;font-weight:700;color:#AEB6C6;letter-spacing:.04em}
+.cp-val{font-family:var(--f-display);font-size:18px;color:#FFC72C}
+.thr-track{position:relative;width:64px;height:190px;border-radius:14px;background:#0E1015;box-shadow:inset 0 2px 6px rgba(0,0,0,.6);cursor:grab;touch-action:none}
+.thr-slot{position:absolute;left:50%;top:14px;bottom:14px;width:10px;margin-left:-5px;border-radius:5px;background:#000;box-shadow:inset 0 0 0 1px #333}
+.thr-fill{position:absolute;left:50%;bottom:14px;width:10px;margin-left:-5px;border-radius:5px;background:linear-gradient(#FF8A3D,#FFC72C)}
+.thr-mark{position:absolute;left:2px;right:2px;height:0;border-top:2px dashed #4A5162;font-size:10px;color:#8D96A8;text-align:left;pointer-events:none}
+.thr-mark span{position:absolute;top:-15px;left:0;white-space:nowrap}
+.thr-handle{position:absolute;left:4px;right:4px;height:34px;margin-top:-17px;border-radius:10px;background:linear-gradient(#5B6475,#373D4A);border:2px solid #111;box-shadow:0 3px 0 #000;display:grid;place-items:center;pointer-events:none}
+.thr-handle i{width:70%;height:8px;border-radius:4px;background:linear-gradient(90deg,#FF6A2B,#FFC72C)}
+.thr-track.grab .thr-handle{filter:brightness(1.2)}
+.cp-mid{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+.dial{width:100%;max-width:170px}
+.dial .arc{fill:none;stroke:#3A4150;stroke-width:10;stroke-linecap:round}
+.dial .ok{fill:none;stroke:#2FBF71;stroke-width:10;stroke-linecap:round}
+.dial .ndl{stroke:#FFC72C;stroke-width:4;stroke-linecap:round;transform-origin:60px 60px;transition:transform .08s linear}
+.dial text{fill:#E9EDF5;font-size:11px;text-anchor:middle;font-family:var(--f-body)}
+.dial .big{font-family:var(--f-display);font-size:20px;fill:#FFC72C}
+.cp-row{display:flex;gap:6px;width:100%}
+.cp-box{flex:1;background:#0E1015;border-radius:10px;padding:4px 6px;text-align:center;font-size:11px;color:#AEB6C6;line-height:1.1}
+.cp-box b{display:block;font-family:var(--f-display);font-weight:400;font-size:19px;color:#E9EDF5}
+.rot{width:100%;border-radius:12px;padding:6px 4px;text-align:center;font-weight:800;letter-spacing:.08em;background:#20252F;color:#4F5869;border:2px solid #2E3441;font-size:15px;line-height:1.15}
+.rot small{display:block;font-size:12px;letter-spacing:0;font-weight:700}
+.rot.on{background:#1E8E52;color:#fff;border-color:#62E3A0;box-shadow:0 0 14px #2FBF71;animation:rotblink .5s steps(2) infinite}
+.rot.warn{background:#9A5A00;color:#fff;border-color:#FFC72C;box-shadow:0 0 12px #FFC72C}
+@keyframes rotblink{50%{filter:brightness(1.35)}}
+.stick-track{position:relative;width:96px;height:190px;border-radius:14px;background:#0E1015;box-shadow:inset 0 2px 6px rgba(0,0,0,.6);cursor:grab;touch-action:none;overflow:hidden}
+.stick-track .st-t,.stick-track .st-b{position:absolute;left:0;right:0;font-size:10.5px;text-align:center;color:#8D96A8;line-height:1.15;pointer-events:none}
+.stick-track .st-t{top:5px}.stick-track .st-b{bottom:5px;color:#9FE3BD}
+.stick-shaft{position:absolute;left:50%;top:50%;width:12px;margin-left:-6px;background:linear-gradient(90deg,#222,#555,#222);border-radius:6px;pointer-events:none}
+.yoke{position:absolute;left:6px;right:6px;top:50%;height:56px;margin-top:-28px;pointer-events:none}
+.yoke svg{width:100%;height:100%;display:block}
+.stick-track.grab .yoke{filter:brightness(1.2)}
+.cp-hint{grid-column:1/-1;text-align:center;font-size:14px;color:#C9D1E0;min-height:1.3em;margin-top:2px}
+.cp-hint b{color:#FFC72C}
+@media (max-width:370px){.cockpit{grid-template-columns:84px 1fr 92px;gap:6px}.thr-track{width:58px}.stick-track{width:86px}}
+.kbdhelp{color:var(--muted);font-size:13px;margin:8px 2px 0}
+
+/* 단계 고르기 */
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.lvl{border:1px solid var(--hair);border-radius:var(--r);background:var(--card);box-shadow:var(--shadow-sm);padding:10px 12px;text-align:left;font:inherit;color:inherit}
+.lvl b{display:block;font-family:var(--f-display);font-weight:400;font-size:19px}
+.lvl small{display:block;color:var(--muted);font-size:13px;line-height:1.3}
+.lvl .st{font-size:18px;letter-spacing:2px;margin-top:4px}
+.lvl.lock{opacity:.55;filter:grayscale(.6)}
+.rankbar{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--hair);border-radius:var(--r);box-shadow:var(--shadow-sm);padding:10px 14px;margin:0 0 14px}
+.rankbar .ic{font-size:36px}
+.rankbar b{font-family:var(--f-display);font-weight:400;font-size:21px;display:block}
+.rankbar small{color:var(--muted);font-size:14px}
+.rankbar .meter{height:8px;border-radius:4px;background:var(--hair);margin-top:4px;overflow:hidden}
+.rankbar .meter i{display:block;height:100%;background:var(--warm)}
+.keys{margin-left:auto;text-align:right;font-size:14px;color:var(--muted)}
+.keys b{font-size:20px;color:var(--ink)}
+
+/* 지도 퀴즈 */
+.qz{text-align:center}
+.qz .qflag{font-size:96px;line-height:1.1}
+.qz .qtext{font-size:22px;margin:8px 0 12px;font-family:var(--f-display)}
+.qz .opts{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:520px){.qz .opts{grid-template-columns:repeat(3,1fr)}}
+.qz .opt{border:2px solid var(--hair);border-radius:16px;background:var(--card);min-height:64px;font-size:20px;font-weight:700;color:var(--ink);box-shadow:var(--shadow-sm)}
+.qz .opt.right{background:#DDF5E6;border-color:#2FBF71}.qz .opt.wrong{background:#FCE2D8;border-color:#E0532C}
+.qz .fbx{min-height:2.6em;margin:10px 0 0;font-size:17px}
+.qprog{display:flex;gap:6px;justify-content:center;margin:2px 0 10px}.qprog i{width:22px;height:8px;border-radius:4px;background:var(--hair)}.qprog i.done{background:var(--warm)}.qprog i.now{background:var(--sign);outline:2px solid var(--plate)}
+.qmap{border-radius:var(--r);overflow:hidden;margin:0 0 10px;box-shadow:var(--shadow-sm)}
+.qmap svg{display:block;width:100%;height:auto}
+.combo{display:inline-block;background:var(--warm);color:#fff;border-radius:999px;padding:0 10px;font-weight:700;margin-left:6px;animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+.loading{padding:40px 0;text-align:center;color:var(--muted)}
+
+/* 여행지 잠금 */
+.dests button.lock{opacity:.6;filter:grayscale(.7);position:relative}
+.dests button .lk{display:block;font-size:13px;color:var(--warm);font-weight:700}
+.mute{margin-left:auto}
+.gtop .mute{min-width:44px;justify-content:center}
+.rankchip{font-size:14px;color:var(--muted)}
 
 /* 도착 엽서·여권 */
 .dests{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
@@ -113,16 +191,90 @@ main.wrap{padding-bottom:calc(30px + env(safe-area-inset-bottom,0px))}
 </head>
 <body>
 <main class="wrap" id="app"></main>
-<script src="/world-map.js"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const app=$('#app');
-const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}}};
 const PATTERNED=['airport','dots','stars','stripes','sweet'];
 (function(k){k=k||'airport';document.documentElement.dataset.skin=k;document.documentElement.classList.toggle('patterned',PATTERNED.includes(k))})(ls.get('hb-skin'));
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function shuffle(a){a=a.slice();const r=new Uint32Array(a.length);crypto.getRandomValues(r);for(let i=a.length-1;i>0;i--){const j=r[i]%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 let voices=[];try{voices=speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>voices=speechSynthesis.getVoices()}catch(e){}
-function say(text,lang='ko-KR',rate=.85){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;const v=voices.find(v=>v.lang.replace('_','-').toLowerCase().startsWith(lang.toLowerCase().slice(0,2)));if(v)u.voice=v;u.rate=rate;speechSynthesis.speak(u)}catch(e){}}
+function say(text,lang='ko-KR',rate=.85){if(Sfx.muted)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=lang;const v=voices.find(v=>v.lang.replace('_','-').toLowerCase().startsWith(lang.toLowerCase().slice(0,2)));if(v)u.voice=v;u.rate=rate;speechSynthesis.speak(u)}catch(e){}}
+
+/* ---------- 소리·진동 (Web Audio로 직접 만든 짧은 소리, 파일 없음) ---------- */
+const Sfx=(()=>{
+  let ctx=null,master=null,eng=null;const S={muted:ls.get('sy-mute')==='1'};
+  function ac(){if(S.muted)return null;if(!ctx){try{ctx=new(window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.5;master.connect(ctx.destination)}catch(e){return null}}
+    if(ctx.state==='suspended')ctx.resume().catch(()=>{});return ctx}
+  function tone(f,dur=.12,type='sine',vol=.25,f2=null,delay=0){const c=ac();if(!c)return;const t=c.currentTime+delay,o=c.createOscillator(),gn=c.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+    gn.gain.setValueAtTime(0,t);gn.gain.linearRampToValueAtTime(vol,t+.01);gn.gain.exponentialRampToValueAtTime(.001,t+dur);
+    o.connect(gn).connect(master);o.start(t);o.stop(t+dur+.02)}
+  function noise(dur=.3,vol=.3,freq=800){const c=ac();if(!c)return;const n=c.createBufferSource(),b=c.createBuffer(1,c.sampleRate*dur,c.sampleRate),d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*(1-i/d.length);n.buffer=b;const f=c.createBiquadFilter();f.type='lowpass';f.frequency.value=freq;const gn=c.createGain();gn.gain.value=vol;n.connect(f).connect(gn).connect(master);n.start()}
+  S.unlock=()=>ac();
+  S.click=()=>tone(900,.05,'square',.08);
+  S.tick=()=>tone(1500,.025,'square',.05);
+  S.ding=()=>{tone(1318,.12,'sine',.22);tone(1760,.18,'sine',.18,null,.07)};
+  S.combo=n=>{for(let i=0;i<Math.min(n,4);i++)tone(880*Math.pow(1.26,i),.09,'triangle',.16,null,i*.06)};
+  S.bad=()=>tone(220,.25,'sawtooth',.12,110);
+  S.thud=(hard)=>{noise(hard?.5:.25,hard?.6:.35,hard?500:300);tone(hard?70:110,.25,'sine',.4,40)};
+  S.chime=()=>{tone(784,.12,'triangle',.2);tone(1046,.2,'triangle',.2,null,.12)};
+  S.fanfare=()=>[523,659,784,1046,784,1046].forEach((f,i)=>tone(f,i===5?.4:.14,'triangle',.2,null,i*.13));
+  S.whoosh=()=>noise(.6,.25,1500);
+  // 엔진: 톱니파 두 개 + 바람 소리, 출력이 오르면 소리도 높아진다
+  S.engine=(on)=>{const c=on?ac():ctx;if(!c)return;
+    if(on&&!eng){const o1=c.createOscillator(),o2=c.createOscillator(),f=c.createBiquadFilter(),gn=c.createGain();
+      o1.type='sawtooth';o2.type='sawtooth';o2.detune.value=14;f.type='lowpass';f.frequency.value=500;gn.gain.value=0;
+      o1.connect(f);o2.connect(f);f.connect(gn).connect(master);o1.start();o2.start();eng={o1,o2,f,gn}}
+    if(!on&&eng){const e=eng;eng=null;try{e.gn.gain.setTargetAtTime(0,c.currentTime,.08);setTimeout(()=>{try{e.o1.stop();e.o2.stop()}catch(_){}},400)}catch(_){}}};
+  S.engineSet=(thr,v)=>{if(!eng||!ctx)return;const t=ctx.currentTime;
+    eng.o1.frequency.setTargetAtTime(55+thr*120+v*.25,t,.12);eng.o2.frequency.setTargetAtTime(56+thr*124+v*.25,t,.12);
+    eng.f.frequency.setTargetAtTime(380+thr*1700,t,.12);eng.gn.gain.setTargetAtTime(S.muted?0:.025+thr*.07,t,.1)};
+  S.setMuted=m=>{S.muted=m;ls.set('sy-mute',m?'1':null);if(m){S.engine(false);try{speechSynthesis.cancel()}catch(e){}}};
+  return S;
+})();
+const buzz=p=>{if(Sfx.muted)return;try{navigator.vibrate?.(p)}catch(e){}};
+
+
+/* ---------- 놀이 기록: 가족 코드가 있으면 서버(가족 모두), 없으면 이 기기 ---------- */
+const CODE=ls.get('hb-code');
+const T={travel:{stamps:[],stars:0,best:{},ok:0},grapes:0};
+function localTravel(){let t={};try{t=JSON.parse(ls.get('sy-travel'))||{}}catch(e){}
+  if(!t.stamps){let pp=[];try{pp=JSON.parse(ls.get('sy-passport'))||[]}catch(e){}t={stamps:pp,stars:0,best:{},ok:pp.length}} // 예전 여권 도장 옮기기
+  return t}
+function localGrapes(){try{const s=JSON.parse(ls.get('sy-grapes'))||{};return(s.history||[]).length*30+(s.board||[]).length}catch(e){return 0}}
+async function loadTravel(){
+  if(CODE){try{const r=await fetch('/api/family?code='+encodeURIComponent(CODE),{cache:'no-store'});const d=await r.json();
+    if(r.ok){T.travel=d.travel||T.travel;T.grapes=d.stickers?.total??0;T.child=(d.members||[]).find(m=>m.role==='child')?.name;
+      // 이 기기에만 있던 예전 도장을 한 번만 가족 기록으로 옮긴다
+      if(!T.travel.stamps.length&&!ls.get('sy-passport-moved')){const pp=localTravel().stamps.slice(0,10).reverse();ls.set('sy-passport-moved','1');
+        for(const s of pp)await travelOp('addTrip',{code:s.code,nm:s.nm,date:s.date,stars:0})}
+      T.online=true;return}}catch(e){}}
+  T.online=false;T.travel=localTravel();T.grapes=localGrapes();
+}
+async function travelOp(op,p){
+  if(CODE){try{const r=await fetch('/api/family',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({code:CODE,op,p:{roundId:Date.now().toString(36)+Math.random().toString(36).slice(2,7),...p}})});
+    const d=await r.json();if(r.ok){T.travel=d.travel;T.grapes=d.stickers?.total??T.grapes;return true}}catch(e){}
+    // 서버에 못 보냈으면 아래처럼 화면에만 반영하고 알려 준다
+    toastG('기록을 저장하지 못했어요. 인터넷을 확인해 주세요');}
+  const t=T.travel;
+  if(op==='addTrip'){t.stamps.unshift({code:p.code,nm:p.nm,date:p.date,at:Date.now()});t.stamps=t.stamps.slice(0,60);t.stars+=p.stars||0;t.ok++}
+  if(op==='gameResult'){if((p.score||0)>(t.best[p.key]||0))t.best[p.key]=p.score;if(p.ok)t.ok++;t.stars+=p.stars||0}
+  if(!CODE)ls.set('sy-travel',JSON.stringify(t));return !CODE}
+function toastG(t){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#14171D;color:#FFC72C;padding:10px 20px;border-radius:999px;z-index:50;max-width:90vw;text-align:center;font-weight:700';document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+// 열쇠: 공부방 포도알 1알 = 열쇠 1개, 여행 별 30개 = 열쇠 1개
+const keysNow=()=>T.grapes+Math.floor((T.travel.stars||0)/30);
+const RANKS=[[0,'훈련생','🧑‍🎓'],[5,'부기장','👩‍✈️'],[15,'기장','🧑‍✈️']];
+function rankOf(ok=T.travel.ok||0){let i=0;for(let k=0;k<RANKS.length;k++)if(ok>=RANKS[k][0])i=k;const nx=RANKS[i+1];return{i,name:RANKS[i][1],ic:RANKS[i][2],next:nx?nx[0]-ok:0,nextName:nx?.[1],pct:nx?(ok-RANKS[i][0])/(nx[0]-RANKS[i][0]):1}}
+const kidName=()=>T.child||'세윤';
+/* ---------- 받침에 맞는 조사 ---------- */
+const jongOf=w=>{const c=String(w).charCodeAt(String(w).length-1)-0xAC00;return c>=0&&c<=11171?c%28:0};
+const josa=(w,a,b)=>w+(jongOf(w)?a:b);                       // 서울은, 파리는
+const ro=w=>w+(jongOf(w)&&jongOf(w)!==8?'으로':'로');         // 뉴욕으로, 서울로, 파리로
 
 /* ---------- 도시와 시간 ---------- */
 const CITIES=[
@@ -159,7 +311,10 @@ function anaClock(p){const h=(p.hour%12+p.minute/60)*30,m=p.minute*6,rad=a=>(a-9
     <line x1="50" y1="50" x2="${50+36*Math.cos(rad(m))}" y2="${50+36*Math.sin(rad(m))}" stroke-width="3.5"/><circle cx="50" cy="50" r="4" fill="#E5512D"/></svg>`}
 
 /* ---------- 세계 지도 (Natural Earth 공개 지도 자료, world-map.js) ---------- */
-const WM=window.WORLD,RAD=Math.PI/180;
+let WM=null;const RAD=Math.PI/180;
+// 지도 자료(world-map.js)는 지도·퀴즈를 열 때만 불러온다
+let mapP=null;
+function loadMap(){if(WM)return Promise.resolve(WM);return mapP||=new Promise((res,rej)=>{const s=document.createElement('script');s.src='/world-map.js';s.onload=()=>{WM=window.WORLD;res(WM)};s.onerror=()=>{mapP=null;rej(new Error('지도를 불러오지 못했어요'))};document.head.appendChild(s)})}
 // 밀러 도법: tools/map/build-map.mjs 와 같은 식이라 도시 점이 지도와 딱 맞는다
 const proj=(lon,lat)=>[WM.tx+WM.k*lon*RAD,WM.ty-WM.k*1.25*Math.log(Math.tan(Math.PI/4+.4*Math.max(-80,Math.min(84,lat))*RAD))];
 const OCEANS=[['태평양',-140,8],['태평양',165,22],['대서양',-38,28],['대서양',-15,-25],['인도양',78,-22],['북극해',0,80]];
@@ -171,7 +326,10 @@ function nightRects(){const now=new Date(),uh=now.getUTCHours()+now.getUTCMinute
   return r+`<circle class="sun" cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="14"/>`}
 
 let selCity='paris',mapTimer=null,mapZoom=1;
-function renderMap(){
+async function renderMap(){
+  app.innerHTML=`${topbar('세계 시계 지도','hub')}<p class="loading">🌍 지도를 펼치는 중…</p>`;
+  try{await loadMap()}catch(e){app.innerHTML=`${topbar('세계 시계 지도','hub')}<p class="loading">${e.message}. 인터넷을 확인하고 다시 열어 주세요.</p>`;return}
+  if(CUR!=='map')return;
   app.innerHTML=`${topbar('세계 시계 지도','hub')}
   <div class="mapwrap"><div class="mapscroll" id="mapscroll"><svg id="map" viewBox="0 0 ${WM.w} ${WM.h}" role="img" aria-label="나라별로 색칠하고 낮과 밤을 칠한 세계 지도">
     <rect class="ocean" width="${WM.w}" height="${WM.h}"/><g class="countries">${countries()}</g><g id="night"></g>
@@ -191,7 +349,7 @@ function renderMap(){
       <div class="row"><button class="btn primary" id="hiBtn">🔊 ${c.ct} 인사: <span class="greet">${c.hi[2]}</span></button></div>`;
     $('#hiBtn').onclick=()=>say(c.hi[0],c.hi[1],.8);
     $('#cities').innerHTML=CITIES.map(c=>{const p=partsIn(c.tz);return`<button data-c="${c.id}" class="${c.id===selCity?'on':''}"><b>${c.fl} ${c.nm}</b><span class="t">${hm(p)}</span> ${isNight(p)?'🌙':'☀️'}</button>`}).join('');
-    $$('[data-c]').forEach(b=>b.onclick=()=>{selCity=b.dataset.c;draw();say(CITIES.find(x=>x.id===selCity).nm+'는 지금 '+hm(partsIn(CITIES.find(x=>x.id===selCity).tz)))});
+    $$('[data-c]').forEach(b=>b.onclick=()=>{selCity=b.dataset.c;draw();say(josa(CITIES.find(x=>x.id===selCity).nm,'은','는')+' 지금 '+hm(partsIn(CITIES.find(x=>x.id===selCity).tz)))});
   };
   const setZoom=z=>{mapZoom=Math.max(1,Math.min(4,z));$('#map').style.width=(mapZoom*100)+'%';draw();
     const c=CITIES.find(x=>x.id===selCity),[x,y]=proj(c.lon,c.lat),sc=$('#mapscroll'),m=$('#map');
@@ -200,193 +358,517 @@ function renderMap(){
   draw();setZoom(mapZoom);clearInterval(mapTimer);mapTimer=setInterval(draw,30000);
 }
 
-/* ---------- 비행 놀이 엔진 (활주로·여행 공용) ---------- */
-let W=800;const H=450,GY=372;
-const DESTS=[
- {id:'tokyo',nm:'도쿄',ct:'일본',fl:'🇯🇵',code:'NRT',tz:'Asia/Tokyo',secs:35,pics:'🗼🍣🚅🗻',hi:['こんにちは','ja-JP','곤니치와'],
-  facts:['도쿄 타워는 빨간색과 흰색으로 칠해져 있어요.','일본 사람들은 초밥(스시)을 즐겨 먹어요.','신칸센이라는 아주 빠른 기차가 있어요.','후지산은 일본에서 가장 높은 산이에요.']},
- {id:'paris',nm:'파리',ct:'프랑스',fl:'🇫🇷',code:'CDG',tz:'Europe/Paris',secs:60,pics:'🗼🥐🎨🏰',hi:['Bonjour','fr-FR','봉주르'],
-  facts:['에펠탑은 밤마다 반짝반짝 빛나요.','아침에 크루아상과 바게트 빵을 먹어요.','루브르 박물관에는 모나리자 그림이 있어요.','비행기로 13시간쯤 걸리는 먼 곳이에요.']},
- {id:'newyork',nm:'뉴욕',ct:'미국',fl:'🇺🇸',code:'JFK',tz:'America/New_York',secs:60,pics:'🗽🚕🍔🏙️',hi:['Hello','en-US','헬로'],
-  facts:['자유의 여신상이 횃불을 들고 서 있어요.','노란 택시가 아주 많아요.','하늘에 닿을 듯한 높은 빌딩이 많아요.','서울이 낮이면 뉴욕은 밤이에요!']},
- {id:'sydney',nm:'시드니',ct:'호주',fl:'🇦🇺',code:'SYD',tz:'Australia/Sydney',secs:50,pics:'🦘🐨🏖️🎶',hi:["G'day",'en-AU','그다이'],
-  facts:['조개껍데기 모양의 오페라 하우스가 있어요.','캥거루와 코알라가 사는 나라예요.','우리나라가 겨울일 때 호주는 여름이에요.','바다와 해변이 아주 예뻐요.']},
-];
-let loop=null;
-function stopLoop(){if(loop)cancelAnimationFrame(loop);loop=null}
 
-function drawPlane(g,x,y,pitch,gear,scale=1){
-  g.save();g.translate(x,y);g.rotate(-pitch);g.scale(scale,scale);g.lineJoin='round';g.lineWidth=2.5;g.strokeStyle='#14171D';
-  g.fillStyle='#2F6FD6';g.beginPath();g.moveTo(-46,-4);g.lineTo(-58,-30);g.lineTo(-44,-30);g.lineTo(-26,-6);g.closePath();g.fill();g.stroke();
-  g.fillStyle='#fff';g.beginPath();g.moveTo(-56,-6);g.quadraticCurveTo(-58,8,-44,9);g.lineTo(40,9);g.quadraticCurveTo(62,8,64,0);g.quadraticCurveTo(60,-11,40,-11);g.lineTo(-44,-11);g.quadraticCurveTo(-56,-11,-56,-6);g.closePath();g.fill();g.stroke();
-  g.fillStyle='#FFC72C';g.fillRect(-44,1,84,4);
-  g.fillStyle='#9ED3F5';for(let i=-32;i<36;i+=9){g.beginPath();g.arc(i,-4,2.4,0,7);g.fill()}
-  g.beginPath();g.moveTo(46,-8);g.lineTo(56,-8);g.lineTo(60,-3);g.lineTo(46,-3);g.closePath();g.fillStyle='#14171D';g.fill();
-  g.fillStyle='#14171D';g.font='700 8px Hada,sans-serif';g.fillText('세윤항공',-40,-1);
-  g.fillStyle='#C9CED8';g.beginPath();g.moveTo(-6,2);g.lineTo(18,2);g.lineTo(0,20);g.lineTo(-14,20);g.closePath();g.fill();g.stroke();
-  if(gear){g.fillStyle='#14171D';g.fillRect(-2,9,3,8);g.fillRect(36,9,3,8);g.beginPath();g.arc(0,19,3.5,0,7);g.arc(37,19,3.5,0,7);g.fill()}
+/* ---------- 지도 퀴즈: 밤인 도시, 시차, 국기 ---------- */
+let QZ=null;
+function quizQs(){
+  const now=new Date(),pool=CITIES.filter(c=>c.id!=='seoul');
+  const nightC=pool.filter(c=>isNight(partsIn(c.tz,now))),dayC=pool.filter(c=>!isNight(partsIn(c.tz,now)));
+  const diffC=pool.filter(c=>{const d=(tzOffsetMin(c.tz)-tzOffsetMin('Asia/Seoul'))/60;return d!==0&&Number.isInteger(d)});
+  const countries=[...new Map(CITIES.map(c=>[c.ct,c])).values()];
+  const mk={
+    night:()=>nightC.length&&dayC.length>=2&&{t:'night',ans:shuffle(nightC)[0],opts:null},
+    day:()=>dayC.length&&nightC.length>=2&&{t:'day',ans:shuffle(dayC)[0],opts:null},
+    diff:()=>{const c=shuffle(diffC)[0];if(!c)return null;const d=(tzOffsetMin(c.tz)-tzOffsetMin('Asia/Seoul'))/60,a=Math.abs(d);
+      const o=new Set([a]);for(const x of shuffle([a+1,a-1,a+2,a-2,a+3]))if(x>0&&o.size<3)o.add(x);return{t:'diff',ans:c,d,a,opts:shuffle([...o])}},
+    flag:()=>{const c=shuffle(countries)[0];return{t:'flag',ans:c,opts:shuffle([c,...shuffle(countries.filter(x=>x.ct!==c.ct)).slice(0,2)])}},
+  };
+  const order=shuffle(['night','day','diff','diff','flag','flag','diff','flag']);const qs=[];const used=new Set();
+  for(const t of order){let q=null;for(let k=0;k<6&&(!q||used.has(q.t+q.ans.id));k++)q=mk[t]()||mk.flag();used.add(q.t+q.ans.id);
+    if(q.t==='night'||q.t==='day'){const other=(q.t==='night'?dayC:nightC);q.opts=shuffle([q.ans,...shuffle(other).slice(0,2)])}
+    qs.push(q)}
+  return qs;
+}
+async function renderQuiz(){
+  app.innerHTML=`${topbar('지도 퀴즈','hub')}<p class="loading">🌍 지도를 펼치는 중…</p>`;
+  try{await loadMap()}catch(e){app.innerHTML=`${topbar('지도 퀴즈','hub')}<p class="loading">${e.message}</p>`;return}
+  if(CUR!=='quiz')return;
+  QZ={qs:quizQs(),i:0,right:0,combo:0,best:0};drawQuiz();
+}
+function quizMap(q){
+  const pr=.9,pins=q.opts.map(c=>{const[x,y]=proj(c.lon,c.lat);return`<g class="cpin"><circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${11*pr}"/><text x="${x.toFixed(1)}" y="${(y-16).toFixed(1)}" style="font-size:24px">${c.nm}</text></g>`}).join('');
+  return `<div class="qmap"><svg id="map" viewBox="0 0 ${WM.w} ${WM.h}" role="img" aria-label="낮과 밤을 칠한 세계 지도"><rect class="ocean" width="${WM.w}" height="${WM.h}"/><g class="countries">${countries()}</g><g>${nightRects()}</g>${pins}</svg></div>`;
+}
+function drawQuiz(){
+  const q=QZ.qs[QZ.i];if(!q)return quizEnd();
+  const prog=`<div class="qprog">${QZ.qs.map((_,k)=>`<i class="${k<QZ.i?'done':k===QZ.i?'now':''}"></i>`).join('')}</div>`;
+  let body='';
+  if(q.t==='night'||q.t==='day')body=`${quizMap(q)}<p class="qtext">지금 <b>${q.t==='night'?'밤 🌙':'낮 ☀️'}</b>인 도시는 어디일까?</p><p class="helptxt" style="margin-top:-6px">지도에서 어둡게 칠해진 곳이 밤이에요.</p>
+    <div class="opts">${q.opts.map(c=>`<button class="opt" data-v="${c.id}">${c.fl} ${c.nm}</button>`).join('')}</div>`;
+  if(q.t==='diff'){const ps=partsIn('Asia/Seoul'),pc=partsIn(q.ans.tz);
+    body=`<p class="qtext">${q.ans.fl} ${josa(q.ans.nm,'은','는')} 서울보다 몇 시간 <b>${q.d>0?'빨라요':'늦어요'}</b>?</p>
+    <div class="city" style="justify-content:center;grid-template-columns:auto auto;margin:0 auto 12px;width:fit-content">
+      <div style="text-align:center">${anaClock(ps)}<div>🇰🇷 서울 <b>${hm(ps)}</b></div></div><div style="text-align:center">${anaClock(pc)}<div>${q.ans.fl} ${q.ans.nm} <b>${hm(pc)}</b></div></div></div>
+    <div class="opts">${q.opts.map(n=>`<button class="opt" data-v="${n}">${n}시간</button>`).join('')}</div>`}
+  if(q.t==='flag')body=`<div class="qflag" aria-label="국기">${q.ans.fl}</div><p class="qtext">이 국기는 어느 나라일까?</p>
+    <div class="opts">${q.opts.map(c=>`<button class="opt" data-v="${c.ct}">${c.ct}</button>`).join('')}</div>`;
+  app.innerHTML=`${topbar('지도 퀴즈','hub')}<div class="card qz">${prog}${body}<div class="fbx" id="fbx" aria-live="polite"></div></div>`;
+  if(q.t==='diff')say(`${josa(q.ans.nm,'은','는')} 서울보다 몇 시간 ${q.d>0?'빨라요':'늦어요'}?`);
+  if(q.t==='flag')say('이 국기는 어느 나라일까?');
+  if(q.t==='night'||q.t==='day')say(`지금 ${q.t==='night'?'밤':'낮'}인 도시는 어디일까?`);
+  const correct=q.t==='diff'?String(q.a):q.t==='flag'?q.ans.ct:q.ans.id;
+  $$('.qz .opt').forEach(b=>b.onclick=()=>{if(QZ.answered)return;QZ.answered=true;const ok=b.dataset.v===correct;
+    b.classList.add(ok?'right':'wrong');$$('.qz .opt').find(x=>x.dataset.v===correct).classList.add('right');
+    let why='';const p=partsIn(q.ans.tz);
+    if(q.t==='diff')why=`서울이 ${hm(partsIn('Asia/Seoul'))}일 때 ${josa(q.ans.nm,'은','는')} ${hm(p)}. <b>${q.a}시간 ${q.d>0?'빨라요':'늦어요'}</b>!`;
+    if(q.t==='flag')why=`${q.ans.fl} <b>${q.ans.ct}</b> 국기예요. ${q.ans.ct} 말로 인사: <span class="greet">${q.ans.hi[2]}</span>`;
+    if(q.t==='night'||q.t==='day')why=`${q.ans.fl} ${josa(q.ans.nm,'은','는')} 지금 ${hm(p)}, ${isNight(p)?'밤이에요 🌙':'낮이에요 ☀️'}`;
+    if(ok){QZ.right++;QZ.combo++;QZ.best=Math.max(QZ.best,QZ.combo);Sfx.ding();if(QZ.combo>=2)Sfx.combo(QZ.combo);buzz(15)}else{QZ.combo=0;Sfx.bad();buzz([40,40,40])}
+    $('#fbx').innerHTML=`${ok?'딩동댕! ':'아쉬워요! '}${why}${ok&&QZ.combo>=2?`<span class="combo">콤보 ×${QZ.combo}</span>`:''}
+      <div class="row" style="justify-content:center;margin-top:10px"><button class="btn primary" id="qnext">${QZ.i<QZ.qs.length-1?'다음 ▶':'결과 보기'}</button></div>`;
+    $('#qnext').onclick=()=>{QZ.i++;QZ.answered=false;drawQuiz();window.scrollTo(0,0)};
+  });
+}
+async function quizEnd(){
+  const n=QZ.qs.length,r=QZ.right,score=Math.round(r/n*100),st=score>=88?3:score>=63?2:r>0?1:0,prev=T.travel.best.quiz||0;
+  app.innerHTML=`${topbar('지도 퀴즈','hub')}<div class="card end" style="text-align:center"><div class="stars3" style="font-size:40px">${[0,1,2].map(i=>`<span class="${i<st?'':'off'}" style="${i<st?'':'filter:grayscale(1);opacity:.3'}">⭐</span>`).join('')}</div>
+    <h2 class="title">${n}문제 중 ${r}개!</h2><p>최고 콤보 ×${QZ.best} · 여행 별 ⭐ ${r}개를 받았어요${score>prev?' <span class="newbest">새 최고 기록!</span>':''}</p>
+    <div class="row" style="justify-content:center;margin-top:12px"><button class="btn primary" id="qagain">한 번 더</button><button class="btn" data-back="hub">놀이터로</button></div></div>`;
+  $('#qagain').onclick=()=>go('quiz');
+  if(st>=2){Sfx.fanfare();burstConfetti()}else Sfx.chime();
+  await travelOp('gameResult',{key:'quiz',score,ok:r>=Math.ceil(n*.75),stars:r});
+}
+// 화면 위 색종이 (DOM, 아주 가볍게)
+function burstConfetti(){if(reduce)return;const box=document.createElement('div');box.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden';
+  const cols=['#FFC72C','#E5512D','#2F6FD6','#2FBF71','#B48AF0'];
+  for(let i=0;i<60;i++){const p=document.createElement('i');const x=Math.random()*100,d=1.6+Math.random()*1.4,r=Math.random()*720;
+    p.style.cssText=`position:absolute;left:${x}%;top:-12px;width:8px;height:12px;background:${cols[i%5]};border-radius:2px;transform:rotate(${r}deg)`;
+    p.animate([{transform:`translate(0,0) rotate(${r}deg)`},{transform:`translate(${(Math.random()-.5)*160}px,${innerHeight+40}px) rotate(${r+540}deg)`}],{duration:d*1000,easing:'cubic-bezier(.2,.6,.4,1)',delay:Math.random()*300,fill:'forwards'});box.appendChild(p)}
+  document.body.appendChild(box);setTimeout(()=>box.remove(),3400)}
+
+/* ---------- 여행지 (지도 도시 자료를 다시 씀) ---------- */
+const DEST_INFO={
+ tokyo:{code:'NRT',secs:35,need:0,pics:'🗼🍣🚅🗻',facts:['도쿄 타워는 빨간색과 흰색으로 칠해져 있어요.','일본 사람들은 초밥(스시)을 즐겨 먹어요.','신칸센이라는 아주 빠른 기차가 있어요.','후지산은 일본에서 가장 높은 산이에요.']},
+ paris:{code:'CDG',secs:55,need:0,pics:'🗼🥐🎨🏰',facts:['에펠탑은 밤마다 반짝반짝 빛나요.','아침에 크루아상과 바게트 빵을 먹어요.','루브르 박물관에는 모나리자 그림이 있어요.','비행기로 13시간쯤 걸리는 먼 곳이에요.']},
+ newyork:{code:'JFK',secs:55,need:0,pics:'🗽🚕🍔🏙️',facts:['자유의 여신상이 횃불을 들고 서 있어요.','노란 택시가 아주 많아요.','하늘에 닿을 듯한 높은 빌딩이 많아요.','서울이 낮이면 뉴욕은 밤이에요!']},
+ sydney:{code:'SYD',secs:50,need:0,pics:'🦘🐨🏖️🎶',facts:['조개껍데기 모양의 오페라 하우스가 있어요.','캥거루와 코알라가 사는 나라예요.','우리나라가 겨울일 때 호주는 여름이에요.','바다와 해변이 아주 예뻐요.']},
+ beijing:{code:'PEK',secs:30,need:1,pics:'🏯🐼🥟🧧',facts:['만리장성은 아주아주 긴 성벽이에요.','판다는 대나무를 아주 좋아해요.','만두(자오쯔)를 즐겨 먹어요.','서울에서 비행기로 2시간쯤이면 가요.']},
+ bangkok:{code:'BKK',secs:45,need:2,pics:'🛕🐘🥭🛶',facts:['금빛으로 빛나는 절(사원)이 아주 많아요.','코끼리를 소중히 여기는 나라예요.','망고와 쌀국수가 맛있어요.','물 위에 떠 있는 수상 시장이 있어요.']},
+ london:{code:'LHR',secs:55,need:3,pics:'💂🎡🚌☂️',facts:['빨간 2층 버스가 다녀요.','빅벤이라는 큰 시계탑이 있어요.','비가 자주 와서 우산을 챙겨 다녀요.','근위병은 높고 까만 털모자를 써요.']},
+ dubai:{code:'DXB',secs:50,need:5,pics:'🏙️🐪🏜️⛲',facts:['세계에서 가장 높은 건물 부르즈 할리파가 있어요.','사막에서 낙타를 탈 수 있어요.','여름에는 아주아주 더워요.','음악에 맞춰 춤추는 큰 분수 쇼가 있어요.']},
+ cairo:{code:'CAI',secs:55,need:7,pics:'🔺🐫🌴🏺',facts:['아주 오래된 피라미드가 있어요.','스핑크스는 사자 몸에 사람 얼굴이에요.','나일강이라는 아주 긴 강이 흘러요.','옛날 이집트의 왕을 파라오라고 불렀어요.']},
+ hawaii:{code:'HNL',secs:55,need:9,pics:'🌺🏄🌋🍍',facts:['넓은 바다 한가운데 있는 섬이에요.','파도를 타는 서핑을 많이 해요.','불을 뿜는 화산이 있어요.','‘알로하’는 안녕, 사랑해라는 뜻이에요.']},
+ la:{code:'LAX',secs:60,need:11,pics:'🎬🌴☀️🎢',facts:['영화를 많이 만드는 할리우드가 있어요.','야자나무와 해변이 많아요.','해가 쨍쨍한 날이 아주 많아요.','커다란 놀이공원이 있어요.']},
+ saopaulo:{code:'GRU',secs:60,need:14,pics:'⚽🦜🌳🎉',facts:['축구를 아주 좋아하는 나라예요.','아마존이라는 아주 큰 숲이 있어요.','알록달록한 앵무새가 살아요.','우리나라에서 지구 거의 반대쪽에 있어요.']},
+};
+const DESTS=Object.entries(DEST_INFO).map(([id,x])=>{const c=CITIES.find(c=>c.id===id);return{id,nm:c.nm,ct:c.ct,fl:c.fl,tz:c.tz,hi:c.hi,...x}}).sort((a,b)=>a.need-b.need);
+
+/* ---------- 이착륙 단계 ---------- */
+const LEVELS={
+  takeoff:[{n:'기본',d:'넓은 활주로, 바람 없음',rw:1800},{n:'짧은 활주로',d:'일찍 출력을 올리고 제때 당겨요',rw:1150},{n:'옆바람',d:'바람에 흔들려도 침착하게',rw:1500,wind:1}],
+  landing:[{n:'기본',d:'하얀 불 2개, 빨간 불 2개 맞추기',rw:1000},{n:'바람',d:'바람에 흔들려요. 조종간으로 바로잡기',rw:1000,wind:1},{n:'짧은 활주로',d:'앞쪽에 내리고 출력은 멈춤!',rw:650},{n:'밤 착륙',d:'불빛만 보고 내려요',rw:900,night:1,wind:.5}],
+};
+const lvlKey=(m,i)=>`${m}-${i+1}`;
+const starsOf=s=>s>=85?3:s>=65?2:s>0?1:0;
+const unlockedLv=(m,i)=>i===0||(T.travel.best[lvlKey(m,i-1)]||0)>0;
+
+/* ---------- 비행 놀이 엔진 (이착륙·여행 공용) ---------- */
+let H=420,W=560,GY=350;
+let flight=null; // 지금 비행: { stop() }
+function endFlight(){if(flight){flight.stop();flight=null}Sfx.engine(false)}
+
+// 배경: 미리 만든 산·건물·별 자리 (매 프레임 새로 만들지 않는다)
+const BG=(()=>{const R=(s=>()=>{s=(s*16807)%2147483647;return s/2147483647})(7);
+  const hills=[...Array(13)].map((_,i)=>({x:i*100,h:40+R()*70}));
+  const city=[...Array(16)].map((_,i)=>({x:i*60+R()*20,w:30+R()*26,h:30+R()*80,win:[...Array(8)].map(()=>R()<.55)}));
+  const trees=[...Array(10)].map((_,i)=>({x:i*140+R()*60,s:.7+R()*.6}));
+  const stars=[...Array(70)].map(()=>({x:R()*1200,y:R()*260,r:.6+R()*1.4,p:R()*6}));
+  const clouds=[...Array(10)].map((_,i)=>({x:i*190+R()*120,y:30+R()*190,s:.5+R()*.8,l:i%2}));
+  return{hills,city,trees,stars,clouds}})();
+function cloud(g,x,y,s,dark){g.fillStyle=dark?'#6E778A':'rgba(255,255,255,.95)';g.beginPath();g.arc(x,y,16*s,0,7);g.arc(x+18*s,y-9*s,20*s,0,7);g.arc(x+40*s,y,16*s,0,7);g.arc(x+20*s,y+5*s,18*s,0,7);g.fill();
+  if(!dark){g.fillStyle='rgba(180,205,235,.35)';g.beginPath();g.ellipse(x+20*s,y+12*s,30*s,7*s,0,0,7);g.fill()}}
+function drawPlane(g,x,y,pitch,gear,t,night,flame){
+  g.save();g.translate(x,y);g.rotate(-pitch);g.lineJoin='round';g.lineWidth=2.2;g.strokeStyle='#14171D';
+  // 꼬리 날개
+  let gr=g.createLinearGradient(0,-34,0,-4);gr.addColorStop(0,'#1E57B8');gr.addColorStop(1,'#3A86F0');
+  g.fillStyle=gr;g.beginPath();g.moveTo(-46,-4);g.lineTo(-60,-34);g.lineTo(-45,-34);g.lineTo(-24,-6);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#FFC72C';g.beginPath();g.moveTo(-55,-30);g.lineTo(-48,-30);g.lineTo(-44,-24);g.lineTo(-52,-24);g.closePath();g.fill();
+  // 몸통 (위는 밝고 아래는 그늘)
+  gr=g.createLinearGradient(0,-12,0,10);gr.addColorStop(0,'#FFFFFF');gr.addColorStop(.6,'#EEF2F8');gr.addColorStop(1,'#C5CEDC');
+  g.fillStyle=gr;g.beginPath();g.moveTo(-58,-6);g.quadraticCurveTo(-60,9,-44,10);g.lineTo(40,10);g.quadraticCurveTo(66,9,68,0);g.quadraticCurveTo(63,-12,40,-12);g.lineTo(-44,-12);g.quadraticCurveTo(-58,-12,-58,-6);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#FFC72C';g.fillRect(-46,2,88,3.5);g.fillStyle='#2F6FD6';g.fillRect(-46,5.5,88,1.6);
+  // 창문
+  g.fillStyle=night?'#FFE08A':'#4C7FB8';for(let i=-34;i<36;i+=8){g.beginPath();g.arc(i,-4,2.3,0,7);g.fill()}
+  g.fillStyle='#14171D';g.beginPath();g.moveTo(47,-9);g.lineTo(58,-9);g.lineTo(63,-3);g.lineTo(47,-3);g.closePath();g.fill();
+  g.fillStyle='rgba(255,255,255,.6)';g.fillRect(49,-8,4,2);
+  g.fillStyle='#14171D';g.font='700 7.5px Hada,sans-serif';g.fillText(kidName()+'항공',-40,-.5);
+  // 날개와 엔진
+  gr=g.createLinearGradient(0,2,0,22);gr.addColorStop(0,'#DCE2EC');gr.addColorStop(1,'#9AA6B8');
+  g.fillStyle=gr;g.beginPath();g.moveTo(-8,3);g.lineTo(20,3);g.lineTo(2,22);g.lineTo(-16,22);g.closePath();g.fill();g.stroke();
+  g.fillStyle='#5A6475';g.beginPath();g.ellipse(4,14,9,4.2,0,0,7);g.fill();g.stroke();
+  if(flame>0.05){g.fillStyle=`rgba(255,${150+Math.random()*60|0},60,${.35+flame*.4})`;g.beginPath();g.moveTo(-5,12);g.lineTo(-5-12*flame-Math.random()*5,14);g.lineTo(-5,16);g.closePath();g.fill()}
+  if(gear){g.fillStyle='#14171D';g.fillRect(-2,10,3,8);g.fillRect(38,10,3,8);g.beginPath();g.arc(0,20,3.6,0,7);g.arc(39,20,3.6,0,7);g.fill()}
+  // 항법등: 꼬리 흰 섬광, 날개 빨강
+  if(Math.sin(t*9)>.7){g.fillStyle='#fff';g.beginPath();g.arc(-58,-33,2.6,0,7);g.fill()}
+  g.fillStyle='#FF3B30';g.beginPath();g.arc(-15,22,2,0,7);g.fill();
+  if(night){g.fillStyle='rgba(255,250,210,.18)';g.beginPath();g.moveTo(66,0);g.lineTo(240,-28);g.lineTo(240,40);g.closePath();g.fill()}
   g.restore();
 }
-function cloud(g,x,y,s,dark){g.fillStyle=dark?'#7D8699':'#fff';g.beginPath();g.arc(x,y,16*s,0,7);g.arc(x+18*s,y-8*s,20*s,0,7);g.arc(x+40*s,y,16*s,0,7);g.arc(x+20*s,y+4*s,18*s,0,7);g.fill()}
 
-function startFlight(mode,dest){
-  stopLoop();
-  W=app.clientWidth<560?500:800; // 휴대폰에서는 화면을 좁게 잡아 비행기를 크게 보여 준다
-  const isTrip=mode==='trip';
-  app.innerHTML=`${topbar(mode==='takeoff'?'이륙 연습':mode==='landing'?'착륙 연습':`${dest.fl} ${dest.nm}로 출발!`,isTrip?'trip':'runway')}
-  <div class="stage2" id="stage"><canvas id="cv" width="${W}" height="${H}"></canvas>
-    <div class="hud"><div class="hudbox" id="hudL"></div><div class="hudbox" id="hudR"></div></div><div class="msg" id="msg" hidden></div></div>
-  <div class="ctrls" id="ctrls"></div><p class="helptxt" id="help"></p>`;
-  const cv=$('#cv'),g=cv.getContext('2d'),hudL=$('#hudL'),hudR=$('#hudR'),msg=$('#msg'),ctrls=$('#ctrls'),help=$('#help');
-  const keys={};let phase=mode==='landing'?'landing':'takeoff';
-  // 상태
-  const P={x:60,alt:0,v:0,vy:0,pitch:0,gear:true};
-  const RW={s:0,e:1800};let t=0,stars=0,objs=[],shake=0,target=200,clouds=[...Array(9)].map((_,i)=>({x:i*260+Math.random()*120,y:40+Math.random()*170,s:.6+Math.random()*.7}));
-  if(phase==='landing'){P.x=0;P.alt=222;P.v=170;P.vy=-20;P.pitch=-.03;RW.s=1850;RW.e=2850}
-  function setCtrls(list){ctrls.innerHTML=list.map(([k,label,sub,alt])=>`<button class="ctrl${alt?' alt':''}" data-k="${k}">${label}<small>${sub}</small></button>`).join('');
-    $$('.ctrl',ctrls).forEach(b=>{const k=b.dataset.k;const on=e=>{e.preventDefault();keys[k]=true;b.classList.add('held')},off=()=>{keys[k]=false;b.classList.remove('held')};
-      b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointercancel',off);b.addEventListener('pointerleave',off);b.addEventListener('contextmenu',e=>e.preventDefault())})}
-  if(phase==='takeoff'){setCtrls([['thr','🔥 출력','꾹 누르고 있기'],['up','⬆ 기수 올리기','속도가 초록이 되면',1]]);help.textContent='출력을 꾹 눌러 속도를 올리고, 속도 막대가 초록 칸에 닿으면 기수를 올려요. 키보드는 스페이스(출력), 위쪽 화살표(기수).'}
-  else{setCtrls([['up','⬆ 올라가기','살짝 위로',1],['down','⬇ 내려가기','살짝 아래로']]);help.textContent='활주로 옆 불빛을 봐요. 하얀 불 2개, 빨간 불 2개면 딱 좋은 길이에요! 하얀 불이 많으면 너무 높고, 빨간 불이 많으면 너무 낮아요.'}
-  const kd=e=>{if(e.code==='Space'){keys.thr=true;e.preventDefault()}if(e.code==='ArrowUp'){keys.up=true;e.preventDefault()}if(e.code==='ArrowDown'){keys.down=true;e.preventDefault()}};
-  const ku=e=>{if(e.code==='Space')keys.thr=false;if(e.code==='ArrowUp')keys.up=false;if(e.code==='ArrowDown')keys.down=false};
-  addEventListener('keydown',kd);addEventListener('keyup',ku);
-  // 여행 중에는 화면을 끌어서 높이를 바꾼다
-  cv.addEventListener('pointerdown',e=>{if(phase==='cruise'){const r=cv.getBoundingClientRect();target=GY-((e.clientY-r.top)/r.height*H)}});
-  cv.addEventListener('pointermove',e=>{if(phase==='cruise'&&e.buttons){const r=cv.getBoundingClientRect();target=GY-((e.clientY-r.top)/r.height*H)}});
-  function show(title,text,btns){msg.hidden=false;msg.innerHTML=`<div class="box"><h3>${title}</h3><p>${text}</p><div class="row" style="justify-content:center">${btns.map(([id,l,p])=>`<button class="btn${p?' primary':''}" id="${id}">${l}</button>`).join('')}</div></div>`}
-  function finish(){stopLoop();removeEventListener('keydown',kd);removeEventListener('keyup',ku)}
+function startFlight(mode,opt={}){
+  endFlight();
+  const isTrip=mode==='trip',dest=opt.dest,lv=opt.level||0,L=(isTrip?LEVELS.takeoff[0]:LEVELS[mode][lv]);
+  W=app.clientWidth<600?560:820;H=W<600?400:430;GY=H-70;
+  const PX=W<600?175:240;
+  const ac=new AbortController(),sig={signal:ac.signal};
+  const title=mode==='takeoff'?`🛫 이륙 · ${L.n}`:mode==='landing'?`🛬 착륙 · ${L.n}`:`${dest.fl} ${ro(dest.nm)} 출발!`;
+  app.innerHTML=`${topbar(title,isTrip?'trip':'runway')}
+  <div class="stage2" id="stage"><canvas id="cv"></canvas>
+    <div class="hud"><div class="hudbox" id="hudL"></div><div class="hudbtns"><div class="hudbox" id="hudR"></div><button id="helpB" aria-label="도움말">?</button><button id="pauseB" aria-label="잠깐 멈추기">⏸</button></div></div>
+    <div class="msg" id="msg" hidden></div></div>
+  <div class="cockpit" id="cockpit">
+    <div class="cp-col"><span class="cp-lbl">출력 레버</span>
+      <div class="thr-track" id="thr" role="slider" aria-label="출력 레버" aria-valuemin="0" aria-valuemax="100" tabindex="0">
+        <div class="thr-slot"></div><div class="thr-fill" id="thrFill"></div>
+        <div class="thr-mark" style="top:14px"><span>이륙 🔥</span></div><div class="thr-mark" style="top:50%"><span>반</span></div><div class="thr-mark" style="bottom:14px;top:auto"><span>멈춤</span></div>
+        <div class="thr-handle" id="thrH"><i></i></div></div>
+      <span class="cp-val" id="thrV">0%</span></div>
+    <div class="cp-mid">
+      <svg class="dial" viewBox="0 0 120 78" aria-hidden="true"><path class="arc" d="M12 64 A48 48 0 0 1 108 64"/><path class="ok" id="okArc" d=""/>
+        <line class="ndl" id="ndl" x1="60" y1="60" x2="60" y2="20"/><circle cx="60" cy="60" r="5" fill="#FFC72C"/><text x="60" y="76">속도</text><text class="big" id="spdT" x="60" y="48">0</text></svg>
+      <div class="cp-row"><div class="cp-box">높이<b id="altT">0</b></div><div class="cp-box" id="box2L">기수<b id="pitT">0°</b></div></div>
+      <div class="rot" id="rot">ROTATE<small>조종간 당기기</small></div></div>
+    <div class="cp-col"><span class="cp-lbl">조종간</span>
+      <div class="stick-track" id="stk" role="slider" aria-label="조종간" tabindex="0"><span class="st-t">⬆ 밀면<br>기수 내림</span><span class="st-b">⬇ 당기면<br>기수 올림</span>
+        <div class="stick-shaft" id="shaft"></div>
+        <div class="yoke" id="yoke"><svg viewBox="0 0 84 56"><path d="M8 14 Q8 6 16 6 L30 6 Q34 6 36 12 L48 12 Q50 6 54 6 L68 6 Q76 6 76 14 L76 38 Q76 50 64 50 L58 50 Q54 50 54 44 L54 30 L30 30 L30 44 Q30 50 26 50 L20 50 Q8 50 8 38Z" fill="#3B4252" stroke="#0B0D12" stroke-width="2.5"/><rect x="34" y="16" width="16" height="10" rx="3" fill="#FFC72C"/><circle cx="18" cy="16" r="3" fill="#E5512D"/><circle cx="66" cy="16" r="3" fill="#2FBF71"/></svg></div></div>
+      <span class="cp-val" id="stkV">가운데</span></div>
+    <div class="cp-hint" id="hint"></div>
+  </div>
+  <p class="kbdhelp">키보드: ↑↓ 출력 레버 · 스페이스(누르고 있기) 조종간 당기기 · P 잠깐 멈추기</p>`;
+  const cv=$('#cv'),g=cv.getContext('2d'),DPR=Math.min(2,devicePixelRatio||1);
+  cv.width=W*DPR;cv.height=H*DPR;g.setTransform(DPR,0,0,DPR,0,0);
+  const hudL=$('#hudL'),hudR=$('#hudR'),msg=$('#msg'),hint=$('#hint'),cock=$('#cockpit');
   const VR=190,VMAX=300;
+  let phase=mode==='landing'?'landing':'takeoff',t=0,stars=0,combo=0,bestCombo=0,objs=[],parts=[],pops=[],shake=0,target=200,paused=false,started=false,over=false;
+  const night=!!L.night,wind=L.wind||0;
+  const P={x:60,alt:0,v:0,vy:0,pitch:0,gear:true,maxPitch:0,tail:false,liftX:0,td:null};
+  const RW={s:0,e:L.rw||1800};
+  const C={thr:0,stick:0,kStick:0};
+  let dist=0;const tripLen=isTrip?dest.secs*260:0;
+  if(phase==='landing'){P.x=0;P.alt=236;P.v=165;P.vy=-18;P.pitch=-.02;RW.s=1850;RW.e=RW.s+L.rw;C.thr=.35}
+  const aimX=()=>RW.s+120;
+
+  /* ----- 조종석 입력: 출력 레버(끌어서 놓으면 그 자리에 머묾)와 조종간(놓으면 가운데로) ----- */
+  const thrEl=$('#thr'),stkEl=$('#stk');let lastStep=-1,lastStk=0;
+  function setThr(v,user){v=clamp(v,0,1);for(const d of [0,.5,1])if(Math.abs(v-d)<.045)v=d; // 멈춤·반·이륙 자리에서 딸깍
+    const step=Math.round(v*10);if(user&&step!==lastStep){lastStep=step;Sfx.tick();buzz(v===1||v===0||v===.5?18:6)}C.thr=v;drawThr()}
+  function drawThr(){const h=thrEl.clientHeight-28,y=14+(1-C.thr)*h;$('#thrH').style.top=y+'px';$('#thrFill').style.height=(C.thr*h)+'px';
+    $('#thrV').textContent=Math.round(C.thr*100)+'%';thrEl.setAttribute('aria-valuenow',Math.round(C.thr*100))}
+  function setStick(v,user){v=clamp(v,-1,1);C.stick=v;const q=Math.round(v*2);if(user&&q!==lastStk){lastStk=q;Sfx.tick();buzz(q===2?22:8)}drawStk()}
+  function drawStk(){const h=stkEl.clientHeight,off=C.stick*(h/2-34);$('#yoke').style.transform=`translateY(${off}px) scale(${1-Math.abs(C.stick)*.06})`;
+    const sh=$('#shaft');sh.style.top=(h/2+Math.min(0,off))+'px';sh.style.height=Math.abs(off)+'px';
+    $('#stkV').textContent=C.stick>.15?'당김 '+Math.round(C.stick*100)+'%':C.stick<-.15?'밂 '+Math.round(-C.stick*100)+'%':'가운데'}
+  const yIn=(el,e)=>{const r=el.getBoundingClientRect();return(e.clientY-r.top)/r.height};
+  const drag=(el,fn,release)=>{let id=null;
+    el.addEventListener('pointerdown',e=>{if(over||paused)return;id=e.pointerId;try{el.setPointerCapture(id)}catch(_){}el.classList.add('grab');fn(yIn(el,e));begin();e.preventDefault()},sig);
+    el.addEventListener('pointermove',e=>{if(e.pointerId===id)fn(yIn(el,e))},sig);
+    const up=e=>{if(e.pointerId!==id)return;id=null;el.classList.remove('grab');release&&release()};
+    el.addEventListener('pointerup',up,sig);el.addEventListener('pointercancel',up,sig);el.addEventListener('lostpointercapture',up,sig)};
+  drag(thrEl,f=>setThr(1-(f*thrEl.clientHeight-14)/(thrEl.clientHeight-28),true));
+  let spring=false;drag(stkEl,f=>{spring=false;setStick((f-.5)*2/((stkEl.clientHeight/2-34)/(stkEl.clientHeight/2)),true)},()=>{spring=true});
+  // 키보드
+  const keys={};
+  addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'||e.code==='ArrowDown')e.preventDefault();if(e.repeat&&e.code!=='ArrowUp'&&e.code!=='ArrowDown')return;keys[e.code]=true;
+    if(e.code==='ArrowUp'){setThr(C.thr+.1,true);begin()}if(e.code==='ArrowDown')setThr(C.thr-.1,true);if(e.code==='KeyP')togglePause();if(e.code==='Space'||e.code==='KeyS')begin()},sig);
+  addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='Space'||e.code==='KeyS'||e.code==='KeyW')spring=true},sig);
+  // 여행 중에는 화면을 끌어도 높이가 바뀐다
+  const canvasY=e=>{const r=cv.getBoundingClientRect();return GY-((e.clientY-r.top)/r.height*H)};
+  cv.addEventListener('pointerdown',e=>{if(phase==='cruise')target=clamp(canvasY(e),60,GY-110)},sig);
+  cv.addEventListener('pointermove',e=>{if(phase==='cruise'&&e.buttons)target=clamp(canvasY(e),60,GY-110)},sig);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&started&&!over&&!paused)togglePause()},sig);
+  $('#pauseB').onclick=()=>togglePause();$('#helpB').onclick=()=>tutorial(true);
+
+  function begin(){if(started||over)return;started=true;Sfx.engine(true)}
+  function show(title,html,btns){msg.hidden=false;msg.innerHTML=`<div class="box"><h3>${title}</h3>${html}<div class="row" style="justify-content:center;flex-wrap:wrap">${btns.map(([id,l,p])=>`<button class="btn${p?' primary':''}" id="${id}">${l}</button>`).join('')}</div></div>`}
+  function togglePause(){if(over)return;paused=!paused;
+    if(paused){Sfx.engine(false);show('⏸ 잠깐 멈춤','<p>준비되면 계속해요.</p>',[['resume','계속하기',1],['restart','처음부터'],['quit','나가기']]);
+      $('#resume').onclick=togglePause;$('#restart').onclick=()=>startFlight(mode,opt);$('#quit').onclick=()=>go(isTrip?'trip':'runway')}
+    else{msg.hidden=true;if(started)Sfx.engine(true);last=performance.now()}}
+  // 처음 한 번 보여 주는 짧은 설명
+  const TUT={takeoff:[['🔥⬆️','출력 레버를 위로 끝까지 밀어요','레버를 손가락으로 위로 쭉! 엔진 소리가 커져요.'],['🟢⬇️','ROTATE 불이 켜지면 조종간을 아래로 당겨요','꾹 당기고 있어야 날아올라요. 놓으면 다시 내려가요!'],['☁️✈️','하늘로 올라가면 성공!','바퀴는 저절로 접혀요.']],
+    landing:[['⚪⚪🔴🔴','활주로 옆 불빛을 봐요','하얀 불 2개, 빨간 불 2개면 딱 좋은 길이에요. 하얀 불이 많으면 너무 높아요.'],['⬇️🛬','땅에 가까워지면 조종간을 살짝 당겨요','FLARE 불이 켜지면 살짝! 사뿐히 내려앉아요.'],['🔥⬇️','바퀴가 닿으면 출력 레버를 멈춤으로','레버를 아래로 내리면 브레이크가 잘 들어요.']]};
+  TUT.trip=[...TUT.takeoff.slice(0,2),['⭐☁️','별은 모으고 먹구름은 피해요','조종간을 당기면 위로, 밀면 아래로 가요. 화면을 끌어도 돼요.']];
+  function tutorial(force){const steps=TUT[mode];const k='sy-tut-'+mode;if(!force&&ls.get(k))return false;let i=0;paused=true;
+    const draw=()=>{const[ill,h,p]=steps[i];show(h,`<div class="tut-ill">${ill}</div><p>${p}</p><div class="tut-dots">${steps.map((_,j)=>`<i class="${j===i?'on':''}"></i>`).join('')}</div>`,
+      i<steps.length-1?[['tskip','건너뛰기'],['tnext','다음 ▶',1]]:[['tnext','시작하기 ✈',1]]);
+      $('#tnext').onclick=()=>{Sfx.click();if(++i<steps.length)draw();else{ls.set(k,'1');msg.hidden=true;paused=false;last=performance.now()}};
+      const sk=$('#tskip');if(sk)sk.onclick=()=>{ls.set(k,'1');msg.hidden=true;paused=false;last=performance.now()}};
+    draw();return true}
+
+  /* ----- 효과: 먼지·반짝이·색종이, 떠오르는 글자 ----- */
+  function puff(x,y,n,kind){for(let i=0;i<n&&parts.length<160;i++)parts.push({x,y,vx:(Math.random()-.5)*(kind==='spark'?160:60)-(kind==='dust'?P.v*.25:0),vy:kind==='spark'?(Math.random()-.5)*160:-Math.random()*30,
+    life:0,max:kind==='conf'?2.4:kind==='spark'?.6:1.1,s:kind==='dust'?6+Math.random()*8:3+Math.random()*3,kind,c:['#FFC72C','#E5512D','#2F6FD6','#2FBF71','#B48AF0'][i%5],r:Math.random()*6})}
+  function popText(text,x,y,color='#FFC72C'){pops.push({text,x,y,life:0,color})}
+  function confetti(){for(let i=0;i<70;i++){const x=P.x-PX+Math.random()*W;parts.push({x,y:-10-Math.random()*60,vx:(Math.random()-.5)*60,vy:60+Math.random()*80,life:0,max:3,s:4,kind:'conf',c:['#FFC72C','#E5512D','#2F6FD6','#2FBF71','#B48AF0'][i%5],r:Math.random()*6})}}
+
+  function papi(){const ideal=Math.max(0,(aimX()-P.x)*.12);const d=P.alt-ideal;return clamp(Math.round(2+d/14),0,4)}
+  let rotSaid=false,flareSaid=false,windNow=0;
+  function finishOK(kind,score,extraHtml){over=true;Sfx.engine(false);
+    const key=isTrip?null:lvlKey(mode,lv),prev=key?(T.travel.best[key]||0):0,st=starsOf(score),hasNext=!isTrip&&LEVELS[mode][lv+1];
+    if(!isTrip)travelOp('gameResult',{key,score,ok:true,stars:st});
+    Sfx.fanfare();buzz([30,60,30]);confetti();
+    setTimeout(()=>{show(kind==='takeoff'?'🛫 이륙 성공!':'🛬 사뿐 착륙 성공!',`<div class="stars3">${[0,1,2].map(i=>`<span class="${i<st?'':'off'}">⭐</span>`).join('')}</div>
+      <p>${kidName()} 기장님, ${kind==='takeoff'?'멋지게 날아올랐어요!':'승객 모두 안전하게 도착했어요!'}<br>점수 <b>${score}</b>점 ${score>prev?'<span class="newbest">새 최고 기록!</span>':`(최고 ${prev}점)`}</p>${extraHtml||''}`,
+      [['again','다시 하기'],...(hasNext?[['next','다음 단계 ▶',1]]:[]),[kind==='takeoff'?'other':'other2',kind==='takeoff'?'착륙도 해 볼래':'이륙도 해 볼래',!hasNext]]);
+      $('#again').onclick=()=>startFlight(mode,opt);if($('#next'))$('#next').onclick=()=>startFlight(mode,{level:lv+1});
+      const o=$('#other')||$('#other2');o.onclick=()=>startFlight(kind==='takeoff'?'landing':'takeoff',{level:0});
+      say(kind==='takeoff'?'이륙 성공!':'착륙 성공!')},reduce?100:900)}
+  function fail(title,text){over=true;Sfx.engine(false);Sfx.bad();
+    setTimeout(()=>{show(title,`<p>${text}</p>`,[['again','다시 하기',1],['quit','단계 고르기']]);$('#again').onclick=()=>startFlight(mode,opt);$('#quit').onclick=()=>go(isTrip?'trip':'runway')},reduce?50:700)}
+
   function step(dt){
     t+=dt;
+    if(spring)C.stick*=Math.pow(.0005,dt),Math.abs(C.stick)<.02&&(C.stick=0,spring=false);
+    if(keys.Space||keys.KeyS){spring=false;C.stick=Math.min(1,C.stick+2.5*dt)}else if(keys.KeyW){spring=false;C.stick=Math.max(-1,C.stick-2.5*dt)}
+    if(wind){windNow=Math.sin(t*1.1)*.6+Math.sin(t*2.7+1)*.4;}
     if(phase==='takeoff'){
-      if(keys.thr)P.v=Math.min(VMAX,P.v+75*dt);else P.v=Math.max(0,P.v-(P.alt>0?0:25)*dt);
-      if(keys.up&&P.v>=VR){P.pitch=Math.min(.24,P.pitch+.5*dt)}else if(P.alt<=0){P.pitch=Math.max(0,P.pitch-.6*dt);if(keys.up&&P.v<VR&&P.v>40)P.pitch=.03*Math.sin(t*20)}
-      else P.pitch=Math.max(.1,P.pitch-.15*dt);
-      if(P.alt>0||(P.pitch>.08&&P.v>=VR)){P.vy=P.v*Math.sin(P.pitch)*.9-(P.v<VR?60:0);P.alt=Math.max(0,P.alt+P.vy*dt)}
-      P.x+=P.v*dt;
-      if(P.alt<=0&&P.x>RW.e-60){finish();show('활주로가 끝났어요!','조금 더 일찍 출력을 올리고, 초록 칸에서 기수를 올려 봐요.',[['again','다시 하기',1]]);$('#again').onclick=()=>startFlight(mode,dest);return}
+      const ground=P.alt<=0;
+      const acc=C.thr*95-(ground?5+P.v*.06:P.v*.02)-(ground&&C.thr<.05?25:0);
+      P.v=clamp(P.v+acc*dt,0,VMAX);
+      if(ground){
+        if(P.v>=VR&&C.stick>.15)P.pitch=Math.min(C.stick*.27,P.pitch+.55*dt);else P.pitch=Math.max(0,P.pitch-.7*dt);
+        if(P.v<VR&&C.stick>.4&&P.v>40)P.pitch=.02*Math.abs(Math.sin(t*18));
+        if(P.pitch>.255&&P.v<VR+25&&!P.tail){P.tail=true;popText('꼬리 조심!',PX,GY-60,'#FF7A55');buzz(60)}
+        if(P.pitch>.09&&P.v>=VR){P.alt=.5;P.liftX=P.x;Sfx.whoosh();buzz(25)}
+      }else{
+        P.pitch+=((Math.max(.05,C.stick*.27))-P.pitch)*Math.min(1,1.2*dt);
+        P.vy=P.v*Math.sin(P.pitch)*.9-(P.v<VR?60:0)+(wind?windNow*14:0);
+        P.alt=Math.max(0,P.alt+P.vy*dt);if(P.alt<=0){P.pitch=0;P.vy=0}
+      }
+      P.maxPitch=Math.max(P.maxPitch,P.pitch);P.x+=P.v*dt;
+      if(ground&&C.thr>.3&&Math.random()<dt*30)puff(P.x-46,GY,1,'dust');
+      if(P.alt<=0&&P.x>RW.e-60)return fail('활주로가 끝났어요!','출력 레버를 일찍 끝까지 밀고, ROTATE 불이 켜지면 조종간을 꾹 당겨요.');
       if(P.alt>40)P.gear=false;
       if(P.alt>150){
-        if(isTrip){phase='cruise';P.v=280;setCtrls([['up','⬆ 위로','꾹',1],['down','⬇ 아래로','꾹']]);help.textContent='별을 모으고 먹구름은 피해요! 화면을 손가락으로 끌어도 높이가 바뀌어요.';target=P.alt;say('이륙 성공! '+dest.nm+'로 출발해요');}
-        else{finish();say('이륙 성공!');show('🛫 이륙 성공!','세윤 기장님, 멋지게 날아올랐어요!',[['again','다시 하기'],['land','착륙도 해 볼래',1]]);$('#again').onclick=()=>startFlight('takeoff');$('#land').onclick=()=>startFlight('landing');return}
+        if(isTrip){phase='cruise';P.v=260;target=P.alt;say('이륙 성공! '+ro(dest.nm)+' 출발해요');Sfx.chime();popText('이륙 성공!',PX,GY-P.alt-40);hint.innerHTML='⭐ 별은 모으고 ⛈ 먹구름은 피해요! <b>조종간</b>으로 위아래';}
+        else{const remain=clamp((RW.e-P.liftX)/(RW.e-RW.s),0,1);
+          const score=clamp(Math.round(55+remain*30+(P.tail?-20:15)),40,100);
+          return finishOK('takeoff',score,P.tail?'<p class="helptxt">꼬리가 땅에 닿을 뻔했어요. 조금만 천천히 당겨 봐요.</p>':'')}
       }
     }else if(phase==='cruise'){
-      if(keys.up)target=Math.min(330,target+180*dt);if(keys.down)target=Math.max(60,target-180*dt);
-      P.alt+=(target-P.alt)*Math.min(1,3*dt);P.pitch=Math.max(-.25,Math.min(.25,(target-P.alt)/300));P.x+=P.v*dt;
-      if(Math.random()<dt*1.4)objs.push({k:Math.random()<.68?'star':'storm',x:P.x+W,alt:70+Math.random()*250,got:false});
+      target=clamp(target+C.stick*170*dt,60,GY-110);
+      P.alt+=(target-P.alt)*Math.min(1,2.6*dt);P.pitch=clamp((target-P.alt)/300,-.25,.25);
+      P.v=210+C.thr*90;P.x+=P.v*dt;dist+=P.v*dt;
+      if(Math.random()<dt*1.5)objs.push({k:Math.random()<.68?'star':'storm',x:P.x+W,alt:70+Math.random()*(GY-200),got:false});
       for(const o of objs){if(o.got)continue;const dx=o.x-P.x,dy=o.alt-P.alt;
-        if(Math.abs(dx)<44&&Math.abs(dy)<(o.k==='star'?30:34)){o.got=true;if(o.k==='star'){stars++;}else{shake=.6}}}
+        if(Math.abs(dx)<44&&Math.abs(dy)<(o.k==='star'?32:34)){o.got=true;
+          if(o.k==='star'){stars++;combo++;bestCombo=Math.max(bestCombo,combo);const bonus=combo>0&&combo%5===0?1:0;stars+=bonus;
+            Sfx.ding();if(combo>=3)Sfx.combo(Math.min(combo,4));buzz(10);puff(o.x,GY-o.alt,10,'spark');
+            popText(bonus?`콤보 ×${combo}! +2`:combo>=3?`+1 콤보 ×${combo}`:'+1 ⭐',o.x-P.x+PX,GY-o.alt-24)}
+          else{shake=.6;combo=0;Sfx.thud(false);buzz([50,30,50]);popText('덜컹!',PX,GY-P.alt-30,'#FF7A55')}}}
       objs=objs.filter(o=>o.x>P.x-300);
-      if(t>=dest.secs+6){phase='arrive';P.x=0;P.alt=180;P.v=170;P.vy=-30;RW.s=900;RW.e=1900;objs=[];P.gear=true;setCtrls([]);help.textContent=dest.nm+' 공항에 내리는 중이에요…'}
+      if(dist>=tripLen){phase='arrive';P.x=0;P.alt=180;P.v=170;P.vy=-30;RW.s=900;RW.e=1900;objs=[];P.gear=true;cock.classList.add('auto');cock.dataset.auto='🛬 자동 착륙 중…';hint.textContent='';say(dest.nm+' 공항에 내려요')}
     }else if(phase==='arrive'){
-      P.x+=P.v*dt;const ideal=Math.max(0,(RW.s+100-P.x)*.18);P.alt+=(ideal-P.alt)*Math.min(1,2*dt);P.pitch=-.05;
-      if(P.alt<1.5&&P.x>RW.s){P.alt=0;P.pitch=0;P.v=Math.max(0,P.v-120*dt);if(P.v===0){finish();arrival(dest,stars);return}}
+      P.x+=P.v*dt;const ideal=Math.max(0,(RW.s+100-P.x)*.18);P.alt+=(ideal-P.alt)*Math.min(1,2*dt);P.pitch=-.05;C.thr=.3;
+      if(P.alt<1.5&&P.x>RW.s){if(!P.td){P.td=1;Sfx.thud(false);puff(P.x-10,GY,10,'dust')}P.alt=0;P.pitch=0;P.v=Math.max(0,P.v-120*dt);
+        if(P.v===0){over=true;Sfx.engine(false);Sfx.fanfare();confetti();buzz([30,60,30]);setTimeout(()=>{endFlight();arrival(dest,stars,bestCombo)},reduce?100:1400)}}
     }else if(phase==='landing'){
-      if(keys.up)P.vy=Math.min(25,P.vy+45*dt);if(keys.down)P.vy=Math.max(-95,P.vy-45*dt);
-      P.alt+=P.vy*dt;P.x+=P.v*dt;P.pitch=P.vy/500;
-      if(P.alt<=0){P.alt=0;
-        if(P.x<RW.s){finish();show('풀밭에 내렸어요!','활주로까지 조금 더 날아가야 해요. 빨간 불이 많으면 위로 올려요.',[['again','다시 하기',1]])}
-        else if(P.x>RW.e-250){finish();show('활주로를 지나쳤어요!','하얀 불이 많으면 너무 높아요. 조금 더 일찍 내려가요.',[['again','다시 하기',1]])}
-        else if(P.vy<-55){finish();show('쿵! 조금 세게 내렸어요','땅에 가까워지면 ⬆ 를 살짝 눌러서 사뿐히 내려요.',[['again','다시 하기',1]])}
-        else{phase='rollout';P.vy=0;say('착륙 성공!')}
-        if(phase!=='rollout'){$('#again').onclick=()=>startFlight('landing');return}
-      }
-      if(P.x>RW.e+200){finish();show('활주로를 지나쳤어요!','하얀 불이 많으면 너무 높아요. 조금 더 일찍 내려가요.',[['again','다시 하기',1]]);$('#again').onclick=()=>startFlight('landing');return}
+      const vT=110+C.thr*130;P.v+=(vT-P.v)*Math.min(1,.35*dt);
+      let sink=19+(.35-C.thr)*40-C.stick*48;if(P.v<125)sink+=(125-P.v)*.6;
+      if(wind)sink+=windNow*wind*14;sink=clamp(sink,-18,95);
+      if(P.alt<40&&C.thr<.6)sink=Math.max(sink,8); // 땅 가까이선 떠오르지 않고 사뿐히 내려앉기
+      P.vy+=(-sink-P.vy)*Math.min(1,1.7*dt);P.alt+=P.vy*dt;P.x+=P.v*dt;P.pitch=clamp(.02+C.stick*.12+P.vy/600,-.2,.25);
+      if(P.alt<30&&P.alt>0&&!flareSaid){flareSaid=true;Sfx.chime();buzz(20)}
+      if(P.alt<=0){P.alt=0;const vy=P.vy;
+        if(P.x<RW.s)return fail('풀밭에 내렸어요!','활주로까지 조금 더 날아가야 해요. 빨간 불이 많으면 조종간을 살짝 당겨요.');
+        if(P.x>RW.e-120)return fail('활주로를 지나쳤어요!','하얀 불이 많으면 너무 높아요. 조금 더 일찍 내려가요.');
+        if(vy<-55){shake=1.2;Sfx.thud(true);buzz([120,40,120]);puff(P.x,GY,18,'dust');return fail('쿵! 너무 세게 내렸어요','땅에 가까워지면 FLARE 불이 켜져요. 그때 조종간을 살짝 당겨서 사뿐히!')}
+        P.td={vy,x:P.x};phase='rollout';P.vy=0;Sfx.thud(vy<-30);if(vy<-30){shake=.5;buzz(70)}else buzz(25);
+        for(let i=0;i<14;i++)puff(P.x+Math.random()*10,GY,1,'dust');
+        popText(vy>-18?'사뿐!':vy>-32?'좋아요!':'덜컹!',PX,GY-60,vy>-32?'#FFC72C':'#FF7A55');
+        hint.innerHTML='바퀴가 닿았어요! <b>출력 레버를 멈춤</b>으로 내려 브레이크!'}
+      if(P.x>RW.e+200)return fail('활주로를 지나쳤어요!','하얀 불이 많으면 너무 높아요. 조금 더 일찍 내려가요.');
     }else if(phase==='rollout'){
-      P.x+=P.v*dt;P.v=Math.max(0,P.v-110*dt);P.pitch=0;
-      if(P.v===0){finish();show('🛬 사뿐 착륙 성공!','세윤 기장님, 승객 모두 안전하게 도착했어요!',[['again','다시 하기'],['to','이륙도 해 볼래',1]]);$('#again').onclick=()=>startFlight('landing');$('#to').onclick=()=>startFlight('takeoff');return}
+      P.x+=P.v*dt;P.v=Math.max(0,P.v-(C.thr<.15?120:C.thr<.5?55:10)*dt);P.pitch=0;
+      if(Math.random()<dt*20&&P.v>30)puff(P.x-30,GY,1,'dust');
+      if(P.x>RW.e-10)return fail('활주로 끝까지 가 버렸어요!','바퀴가 닿으면 출력 레버를 ‘멈춤’까지 내려야 빨리 서요.');
+      if(P.v===0){const vy=P.td.vy,dx=Math.abs(P.td.x-aimX());
+        const score=clamp(Math.round(100-(vy<-18?(-18-vy)*1.2:0)-Math.min(30,dx/10)),40,100);
+        return finishOK('landing',score,`<p class="helptxt">내린 빠르기 ${Math.round(-vy)} · 목표 지점에서 ${Math.round(dx/10)}m</p>`)}
     }
+    for(const p of parts){p.life+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;if(p.kind==='dust'){p.vy-=8*dt;p.s+=14*dt}if(p.kind==='conf')p.r+=dt*6}
+    parts=parts.filter(p=>p.life<p.max&&p.y<H+20);
+    for(const p of pops)p.life+=dt;pops=pops.filter(p=>p.life<1.1);
     if(shake>0)shake=Math.max(0,shake-dt);
   }
-  function papi(){const ideal=Math.max(0,(RW.s+50-P.x)*.12);const d=P.alt-ideal;return Math.max(0,Math.min(4,Math.round(2+d/14)))}
+
+  /* ----- 그리기 ----- */
+  const skyDay=g.createLinearGradient(0,0,0,GY);skyDay.addColorStop(0,'#5DAEFF');skyDay.addColorStop(.7,'#AEE0FF');skyDay.addColorStop(1,'#E6F6FF');
+  const skyNight=g.createLinearGradient(0,0,0,GY);skyNight.addColorStop(0,'#070D24');skyNight.addColorStop(1,'#25356A');
+  const seaG=g.createLinearGradient(0,GY,0,H);seaG.addColorStop(0,'#3F8FD8');seaG.addColorStop(1,'#1F5FA8');
+  const groundG=g.createLinearGradient(0,GY,0,H);groundG.addColorStop(0,night?'#1E3A28':'#8CCB6A');groundG.addColorStop(1,night?'#132619':'#5FA347');
+  const wrap=(x,span)=>((x%span)+span)%span;
   function render(){
-    const camX=P.x-230,py=GY-P.alt-12;
-    const sky=g.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#7FC1FF');sky.addColorStop(1,'#DDF1FF');g.fillStyle=sky;g.fillRect(0,0,W,H);
-    g.save();if(shake>0)g.translate((Math.random()-.5)*8,(Math.random()-.5)*8);
-    for(const c of clouds){const sx=((c.x-camX*.3)%(W+300)+W+300)%(W+300)-150;cloud(g,sx,c.y,c.s)}
-    // 땅·바다
-    const sea=phase==='cruise';
-    g.fillStyle=sea?'#3F8FD8':'#8CCB6A';g.fillRect(0,GY,W,H-GY);
-    if(sea){g.strokeStyle='rgba(255,255,255,.6)';g.lineWidth=2;for(let i=0;i<8;i++){const x=((i*130-camX*1.0)%(W+130)+W+130)%(W+130)-60;g.beginPath();g.arc(x,GY+30+i%3*18,10,Math.PI*1.1,Math.PI*1.9);g.stroke()}}
+    const camX=P.x-PX,py=GY-P.alt-12,sea=phase==='cruise';
+    g.save();if(shake>0&&!reduce)g.translate((Math.random()-.5)*10*shake,(Math.random()-.5)*10*shake);
+    g.fillStyle=night?skyNight:skyDay;g.fillRect(-10,-10,W+20,H+20);
+    if(night){for(const s of BG.stars){const a=.5+.5*Math.sin(t*2+s.p);g.fillStyle=`rgba(255,255,255,${.4+.6*a})`;g.fillRect(wrap(s.x-camX*.02,1200)*W/1200,s.y,s.r,s.r)}
+      g.fillStyle='#F4F1D0';g.beginPath();g.arc(W-80,60,20,0,7);g.fill();g.fillStyle=night?'#070D24':'#fff';g.beginPath();g.arc(W-72,54,18,0,7);g.fill()}
+    else{g.fillStyle='rgba(255,236,150,.55)';g.beginPath();g.arc(W-90,70,38,0,7);g.fill();g.fillStyle='#FFE27A';g.beginPath();g.arc(W-90,70,24,0,7);g.fill()}
+    for(const c of BG.clouds)if(c.l===0)cloud(g,wrap(c.x-camX*.12,W+400)-200,c.y,c.s*.7,night);
+    if(!sea){
+      g.fillStyle=night?'#17224A':'#A9C7E8';g.beginPath();g.moveTo(0,GY);
+      for(let x=-100;x<=W+100;x+=50){const wx=x+camX*.15,i=Math.floor(wx/100),f=wx/100-i,h1=BG.hills[((i%13)+13)%13].h,h2=BG.hills[(((i+1)%13)+13)%13].h;g.lineTo(x,GY-(h1+(h2-h1)*(.5-.5*Math.cos(f*Math.PI))))}
+      g.lineTo(W,GY);g.closePath();g.fill();
+      for(const b of BG.city){const x=wrap(b.x-camX*.35,1000)-80;if(x>W+40)continue;g.fillStyle=night?'#1F2B4F':'#C9D6E8';g.fillRect(x,GY-b.h,b.w,b.h);
+        if(night){g.fillStyle='#FFD86B';b.win.forEach((on,k)=>{if(on)g.fillRect(x+4+(k%2)*(b.w/2),GY-b.h+6+Math.floor(k/2)*12,4,5)})}}
+    }
+    for(const c of BG.clouds)if(c.l===1)cloud(g,wrap(c.x-camX*.45,W+400)-200,c.y,c.s,night);
+    g.fillStyle=sea?seaG:groundG;g.fillRect(-10,GY,W+20,H-GY+10);
+    if(sea){g.strokeStyle='rgba(255,255,255,.55)';g.lineWidth=2;for(let i=0;i<9;i++){const x=wrap(i*130-camX,W+130)-60;g.beginPath();g.arc(x,GY+26+i%3*16,10,Math.PI*1.1,Math.PI*1.9);g.stroke()}}
     else{
-      const rs=RW.s-camX,re=RW.e-camX;g.fillStyle='#4A4F59';g.fillRect(rs,GY-4,re-rs,24);
-      g.fillStyle='#fff';for(let x=rs+60;x<re-40;x+=60)g.fillRect(x,GY+6,30,3);
-      for(let i=0;i<6;i++){g.fillRect(rs+8,GY-2+i*4,30,2);g.fillRect(re-38,GY-2+i*4,30,2)}
-      g.font='700 16px Hada,sans-serif';g.fillText('33',rs+44,GY+16);
+      for(const tr of BG.trees){const x=wrap(tr.x-camX*.8,1400)-100;if(x<-40||x>W+40)continue;g.fillStyle=night?'#2B1F14':'#7A5230';g.fillRect(x-2,GY-14*tr.s,4,14*tr.s);g.fillStyle=night?'#183A22':'#3E9B4F';g.beginPath();g.arc(x,GY-20*tr.s,11*tr.s,0,7);g.fill()}
+      const rs=RW.s-camX,re=RW.e-camX;
+      g.fillStyle='#3F444E';g.fillRect(rs,GY-3,re-rs,22);g.fillStyle='#4A505C';g.fillRect(rs,GY-3,re-rs,4);
+      g.fillStyle='#fff';for(let x=rs+70;x<re-50;x+=60)g.fillRect(x,GY+7,30,3);
+      for(let i=0;i<5;i++){g.fillRect(rs+8,GY+1+i*3.5,26,2);g.fillRect(re-34,GY+1+i*3.5,26,2)}
+      if(mode==='landing'||phase==='arrive'||phase==='rollout'){g.fillStyle='#fff';g.fillRect(aimX()-camX-14,GY+1,28,4);g.fillRect(aimX()-camX-14,GY+12,28,4)}
+      g.font='700 15px Hada,sans-serif';g.fillStyle='#fff';g.fillText('33',rs+40,GY+17);
+      // 활주로 가장자리 등
+      for(let x=rs;x<=re;x+=40){if(x<-10||x>W+10)continue;g.fillStyle=night?'#FFF2B0':'#F5E6A3';if(night){g.globalAlpha=.35;g.beginPath();g.arc(x,GY-2,6,0,7);g.fill();g.globalAlpha=1}g.beginPath();g.arc(x,GY-2,2,0,7);g.fill()}
       // 관제탑
-      const tx=(phase==='takeoff'?300:RW.s+300)-camX;g.fillStyle='#E9EDF3';g.strokeStyle='#14171D';g.lineWidth=2.5;g.fillRect(tx,GY-110,22,110);g.strokeRect(tx,GY-110,22,110);
-      g.fillStyle='#9ED3F5';g.fillRect(tx-12,GY-140,46,30);g.strokeRect(tx-12,GY-140,46,30);g.fillStyle='#14171D';g.fillRect(tx-16,GY-146,54,7);
+      const tx=(phase==='takeoff'?300:RW.s+300)-camX;g.fillStyle=night?'#2A3348':'#E9EDF3';g.strokeStyle='#14171D';g.lineWidth=2.5;g.fillRect(tx,GY-110,22,110);g.strokeRect(tx,GY-110,22,110);
+      g.fillStyle=night?'#FFD86B':'#9ED3F5';g.fillRect(tx-12,GY-140,46,30);g.strokeRect(tx-12,GY-140,46,30);g.fillStyle='#14171D';g.fillRect(tx-16,GY-146,54,7);
+      if(Math.sin(t*4)>0){g.fillStyle='#FF3B30';g.beginPath();g.arc(tx+11,GY-150,3,0,7);g.fill()}
+      // 바람 자루 (바람 방향과 세기)
+      const wx=RW.s-150-camX;if(wx>-30&&wx<W+30){g.strokeStyle='#14171D';g.lineWidth=2;g.beginPath();g.moveTo(wx,GY);g.lineTo(wx,GY-46);g.stroke();
+        const ws=(wind?.5+.5*Math.abs(windNow):.25);g.save();g.translate(wx,GY-44);g.rotate((1-ws)*1.1);g.fillStyle='#FF7A2B';g.beginPath();g.moveTo(0,-5);g.lineTo(30,-3);g.lineTo(30,3);g.lineTo(0,5);g.closePath();g.fill();
+        g.fillStyle='#fff';g.fillRect(10,-4,6,8);g.restore()}
       // 착륙 안내등
       if(phase==='landing'||phase==='rollout'){const n=papi(),lx=RW.s-camX-70;for(let i=0;i<4;i++){g.beginPath();g.arc(lx+i*14,GY-8,5,0,7);g.fillStyle=i<n?'#fff':'#E5322D';g.fill();g.strokeStyle='#14171D';g.lineWidth=1.5;g.stroke()}}
     }
-    if(phase==='arrive'){g.font='700 22px Hada,sans-serif';g.fillStyle='#14171D';g.fillText(`${dest.fl} ${dest.nm} ${dest.code}`,RW.s-camX+20,GY-40)}
-    // 여행 물건
-    for(const o of objs){if(o.got)continue;const sx=o.x-camX,sy=GY-o.alt;if(o.k==='star'){g.font='34px serif';g.fillText('⭐',sx-17,sy+12)}else{cloud(g,sx-30,sy,1,true);g.font='22px serif';g.fillText('⚡',sx-6,sy+24)}}
-    if(phase==='cruise'){g.fillStyle='rgba(255,255,255,.7)';for(let i=1;i<8;i++){g.beginPath();g.arc(230-60-i*16,py+2+Math.sin(t*6+i)*1.5,3.5-i*.35,0,7);g.fill()}}
-    drawPlane(g,230,py,P.pitch,P.gear);
+    if(phase==='arrive'){g.font='700 22px Hada,sans-serif';g.fillStyle=night?'#fff':'#14171D';g.fillText(`${dest.fl} ${dest.nm} ${dest.code}`,RW.s-camX+20,GY-40)}
+    for(const o of objs){if(o.got)continue;const sx=o.x-camX,sy=GY-o.alt;if(o.k==='star'){const b=1+.12*Math.sin(t*6+o.x);g.save();g.translate(sx,sy);g.scale(b,b);g.font='34px serif';g.textAlign='center';g.textBaseline='middle';g.fillText('⭐',0,0);g.restore()}
+      else{cloud(g,sx-30,sy,1,true);if(Math.sin(t*10+o.x)>.6){g.font='22px serif';g.fillText('⚡',sx-6,sy+24)}}}
+    // 비행운·엔진 연기
+    if(phase==='cruise'){g.fillStyle='rgba(255,255,255,.7)';for(let i=1;i<9;i++){g.beginPath();g.arc(PX-62-i*15,py+2+Math.sin(t*6+i)*1.5,3.8-i*.35,0,7);g.fill()}}
+    for(const p of parts){const a=1-p.life/p.max,sx=p.kind==='conf'?p.x-camX:p.x-camX,sy=p.y;
+      if(p.kind==='dust'){g.fillStyle=`rgba(${night?'120,120,130':'190,170,140'},${a*.55})`;g.beginPath();g.arc(sx,sy-4,p.s,0,7);g.fill()}
+      else if(p.kind==='spark'){g.fillStyle=`rgba(255,215,80,${a})`;g.fillRect(sx,sy,p.s,p.s)}
+      else{g.save();g.translate(sx,sy);g.rotate(p.r);g.fillStyle=p.c;g.fillRect(-3,-5,6,10);g.restore()}}
+    drawPlane(g,PX,py,P.pitch,P.gear,t,night,phase==='takeoff'||phase==='cruise'?C.thr:0);
+    // 그림자
+    if(!sea&&P.alt<120){g.fillStyle=`rgba(0,0,0,${.22*(1-P.alt/120)})`;g.beginPath();g.ellipse(PX+8,GY+4,50*(1-P.alt/240),4,0,0,7);g.fill()}
+    for(const p of pops){const a=1-p.life/1.1;g.globalAlpha=a;g.font='700 22px Hada,sans-serif';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#14171D';g.strokeText(p.text,p.x,p.y-p.life*40);g.fillStyle=p.color;g.fillText(p.text,p.x,p.y-p.life*40);g.globalAlpha=1;g.textAlign='left'}
+    if(night&&!sea){const v=g.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,H*.9);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.35)');g.fillStyle=v;g.fillRect(0,0,W,H)}
     g.restore();
-    // 계기판
-    if(phase==='takeoff'){hudL.innerHTML=`속도 <span class="v">${Math.round(P.v)}</span><div class="gauge"><u style="left:${VR/VMAX*100}%;right:0"></u><i style="width:${P.v/VMAX*100}%"></i></div>`;hudR.innerHTML=`높이 <span class="v">${Math.round(P.alt)}</span>`}
-    else if(phase==='cruise'||phase==='arrive'){const pr=Math.min(1,t/(dest.secs+6));hudL.innerHTML=`ICN ✈ ${dest.code}<div class="prog"><i style="width:${pr*100}%"></i></div>`;hudR.innerHTML=`⭐ <span class="v">${stars}</span>`}
-    else{const n=papi();hudL.innerHTML=`착륙 안내등<div class="papi">${[0,1,2,3].map(i=>`<i class="${i<n?'w':'r'}"></i>`).join('')}</div>`;hudR.innerHTML=`높이 <span class="v">${Math.round(P.alt)}</span> · 내려가는 빠르기 <span class="v">${Math.max(0,Math.round(-P.vy))}</span>`}
+    drawPanel();
   }
-  let last=performance.now();
-  const frame=now=>{if(!cv.isConnected){finish();return}let dt=Math.min(.5,(now-last)/1000);last=now;while(dt>0&&loop!==null){const s=Math.min(.03,dt);step(s);dt-=s}if(loop===null)return;render();if(loop!==null)loop=requestAnimationFrame(frame)};
-  loop=requestAnimationFrame(frame);render();
+  // 계기판은 값이 바뀔 때만 고친다
+  let lastPanel='',lastS=null;
+  function drawPanel(){
+    if(C.stick!==lastS){lastS=C.stick;drawStk()}
+    const spd=Math.round(P.v),alt=Math.round(P.alt),pit=Math.round(P.pitch*57.3);
+    const ground=P.alt<=0&&phase==='takeoff';
+    let rot='',rotTxt='ROTATE<small>조종간 당기기</small>',hintTxt=hint.innerHTML;
+    if(phase==='takeoff'){
+      if(!started)hintTxt='① <b>출력 레버</b>를 위로 쭉 밀어요';
+      else if(ground&&P.v<VR)hintTxt=C.thr<.9?'출력 레버를 <b>끝까지</b> 밀어요! 속도가 초록 칸에 닿을 때까지':'속도가 오르고 있어요… <b>초록 칸</b>을 기다려요';
+      else if(ground&&P.v>=VR){rot='on';hintTxt=C.stick<.15?'지금! <b>조종간을 아래로 당겨요</b> ⬇':C.stick<.35?'조금 더 <b>세게 당겨요!</b>':'좋아요, 그대로 꾹!';
+        if(!rotSaid){rotSaid=true;say('로테이트! 당겨요!');Sfx.chime();buzz([30,40,30])}}
+      else if(!ground)hintTxt=C.stick<.15&&P.alt<60?'놓으면 다시 내려가요! <b>조금 더 당겨요</b>':'올라가요! 그대로 하늘까지 ☁️';
+    }else if(phase==='landing'){
+      if(P.alt<30){rot='warn';rotTxt='FLARE<small>살짝 당기기</small>';hintTxt='땅이 가까워요! <b>조종간을 살짝</b> 당겨요'}
+      else{rotTxt='GLIDE<small>불빛 보기</small>';const n=papi();hintTxt=n>2?'하얀 불이 많아요 → 너무 높아요. <b>조종간을 밀거나 출력을 줄여요</b>':n<2?'빨간 불이 많아요 → 너무 낮아요. <b>살짝 당기거나 출력을 올려요</b>':'딱 좋아요! 하얀 불 2개, 빨간 불 2개 👍'}
+    }else if(phase==='rollout'){rotTxt='BRAKE<small>출력 멈춤</small>';rot=C.thr<.15?'on':'warn'}
+    else if(phase==='cruise'){rotTxt=`⭐ ${stars}<small>${combo>=2?'콤보 ×'+combo:'별 모으기'}</small>`;rot=combo>=3?'on':''}
+    const key=[spd,alt,pit,rot,rotTxt,hintTxt,phase].join('|');if(key===lastPanel)return;lastPanel=key;
+    $('#ndl').style.transform=`rotate(${-90+clamp(P.v/VMAX,0,1)*180}deg)`;$('#spdT').textContent=spd;$('#altT').textContent=alt;$('#pitT').textContent=pit+'°';
+    const r=$('#rot');r.className='rot'+(rot?' '+rot:'');r.innerHTML=rotTxt;if(hint.innerHTML!==hintTxt)hint.innerHTML=hintTxt;
+    if(phase==='cruise'||phase==='arrive'){const pr=phase==='arrive'?1:Math.min(1,dist/tripLen);hudL.innerHTML=`ICN ✈ ${dest.code}<div class="prog"><i style="width:${pr*100}%"></i></div>`;hudR.innerHTML=`⭐ <span class="v">${stars}</span>`}
+    else if(phase==='landing'||phase==='rollout'){const n=papi();hudL.innerHTML=`착륙 안내등<div style="display:flex;gap:4px;margin-top:4px">${[0,1,2,3].map(i=>`<i style="width:13px;height:13px;border-radius:50%;border:1.5px solid #111;background:${i<n?'#fff':'#E5322D'}"></i>`).join('')}</div>`;hudR.innerHTML=wind?`💨 바람`:night?'🌙 밤':''}
+    else{hudL.innerHTML=`${L.n}${wind?' · 💨':''}`;hudR.innerHTML=''}
+    Sfx.engineSet(C.thr,P.v);
+  }
+  // 초록 칸(이륙 속도) 표시
+  {const a0=Math.PI,a1=Math.PI*(1-VR/VMAX),x=60+48*Math.cos(a1),y=60-48*Math.sin(a1);$('#okArc').setAttribute('d',`M${x.toFixed(1)} ${(y+4).toFixed(1)} A48 48 0 0 1 108 64`)}
+  if(mode==='landing'){$('#rot').innerHTML='GLIDE<small>불빛 보기</small>'}
+  setThr(C.thr);setStick(0);
+  let last=performance.now(),loop=0;
+  const frame=now=>{if(!cv.isConnected)return stop();let dt=Math.min(.1,(now-last)/1000);last=now;
+    if(!paused&&(started||phase!=='takeoff')){if(phase==='landing'&&!started){started=true;Sfx.engine(true)}while(dt>0&&!over){const s=Math.min(.02,dt);step(s);dt-=s}}
+    if(over){for(const p of parts){p.life+=.016;p.x+=p.vx*.016;p.y+=p.vy*.016}for(const p of pops)p.life+=.016}
+    render();loop=requestAnimationFrame(frame)};
+  function stop(){cancelAnimationFrame(loop);ac.abort();Sfx.engine(false)}
+  flight={stop};
+  const tutShown=tutorial(false);
+  if(!tutShown&&mode==='landing')paused=false;
+  loop=requestAnimationFrame(frame);
 }
 
 /* ---------- 도착: 엽서와 여권 도장 ---------- */
-function passport(){try{return JSON.parse(ls.get('sy-passport'))||[]}catch(e){return[]}}
-function stampHtml(s){return `<div class="stamp"><small>ARRIVED</small><b>${s.code}</b><small>${s.nm} ${s.date}</small></div>`}
-function arrival(d,stars){
-  const now=new Date(),date=`${now.getMonth()+1}.${now.getDate()}`;const pp=passport();pp.unshift({code:d.code,nm:d.nm,date});ls.set('sy-passport',JSON.stringify(pp.slice(0,60)));
-  const p=partsIn(d.tz);
-  app.innerHTML=`${topbar(d.fl+' '+d.nm+' 도착!','trip')}
+function stampHtml(s){return `<div class="stamp"><small>ARRIVED</small><b>${esc(s.code)}</b><small>${esc(s.nm)} ${esc(s.date||'')}</small></div>`}
+async function arrival(d,stars,bestCombo){
+  const now=new Date(),date=`${now.getMonth()+1}.${now.getDate()}`;
+  const before=keysNow();await travelOp('addTrip',{code:d.code,nm:d.nm,date,stars});const after=keysNow();
+  const p=partsIn(d.tz),newly=DESTS.filter(x=>x.need>before&&x.need<=after);
+  app.innerHTML=`${topbar(d.fl+' '+d.nm+'에 도착!','trip')}
   <div class="card"><h3>그림엽서</h3><div class="postcard"><div>
     <div class="pics">${d.pics}</div>
-    <p style="font-size:19px;margin:8px 0 0">${d.ct} <b>${d.nm}</b>에 도착했어요! 모은 별 ⭐ <b>${stars}</b>개</p>
+    <p style="font-size:19px;margin:8px 0 0">${d.ct} <b>${d.nm}</b>에 도착했어요! 모은 별 ⭐ <b>${stars}</b>개${bestCombo>=3?` · 최고 콤보 ×${bestCombo}`:''}</p>
     <ul>${d.facts.map(f=>`<li>${f}</li>`).join('')}</ul></div>${stampHtml({code:d.code,nm:d.nm,date})}</div></div>
-  <div class="card"><h3>${d.nm}는 지금 몇 시?</h3><div class="city">${anaClock(p)}<div><div class="dg">${hm(p)}</div><div class="diff">${diffText({id:d.id,tz:d.tz})}</div></div></div></div>
+  ${newly.length?`<div class="card" style="text-align:center"><h3>🔓 새 여행지가 열렸어요!</h3><p style="font-size:20px">${newly.map(x=>`${x.fl} ${x.nm}`).join(', ')}</p></div>`:''}
+  <div class="card"><h3>${josa(d.nm,'은','는')} 지금 몇 시?</h3><div class="city">${anaClock(p)}<div><div class="dg">${hm(p)}</div><div class="diff">${diffText({id:d.id,tz:d.tz})}</div></div></div></div>
   <div class="card"><h3>${d.ct} 말로 인사해요</h3><button class="btn primary" id="hiBtn">🔊 <span class="greet">${d.hi[2]}</span></button></div>
   <div class="row"><button class="btn primary" id="again">다른 나라 가기</button><button class="btn" id="pp">내 여권 보기</button></div>`;
-  say(d.nm+'에 도착했어요!');
+  say(d.nm+'에 도착했어요!');burstConfetti();
   $('#hiBtn').onclick=()=>say(d.hi[0],d.hi[1],.8);$('#again').onclick=()=>go('trip');$('#pp').onclick=()=>go('passport');
 }
 
 /* ---------- 화면 ---------- */
-function topbar(title,back){return `<div class="gtop">${back?`<button data-back="${back}">← 뒤로</button>`:'<a href="/">← 우리집</a>'}<h1>${title}</h1></div>`}
-app.addEventListener('click',e=>{const b=e.target.closest('[data-back]');if(b)go(b.dataset.back)});
+let CUR='hub';
+function topbar(title,back){return `<div class="gtop">${back?`<button data-back="${back}">← 뒤로</button>`:'<a href="/">← 우리집</a>'}<h1>${title}</h1><button class="mute" id="muteB" aria-label="${Sfx.muted?'소리 켜기':'소리 끄기'}" aria-pressed="${Sfx.muted}">${Sfx.muted?'🔇':'🔊'}</button></div>`}
+app.addEventListener('click',e=>{const b=e.target.closest('[data-back]');if(b){Sfx.click();go(b.dataset.back);return}
+  const m=e.target.closest('#muteB');if(m){Sfx.setMuted(!Sfx.muted);m.textContent=Sfx.muted?'🔇':'🔊';m.setAttribute('aria-pressed',Sfx.muted);m.setAttribute('aria-label',Sfx.muted?'소리 켜기':'소리 끄기');if(!Sfx.muted){Sfx.unlock();Sfx.ding()}
+    if(flight&&!Sfx.muted)Sfx.engine(true)}});
+function rankBar(){const r=rankOf(),k=keysNow();
+  return `<div class="rankbar"><span class="ic">${r.ic}</span><div style="flex:1;min-width:0"><b>${kidName()} ${r.name}</b>
+    <small>${r.nextName?`비행 성공 ${r.next}번 더 하면 ${r.nextName}!`:'최고 계급이에요! 멋져요'}</small><div class="meter"><i style="width:${Math.round(r.pct*100)}%"></i></div></div>
+    <div class="keys">🔑 <b>${k}</b><br>열쇠</div></div>`}
 function renderHub(){
-  app.innerHTML=`${topbar('놀이터')}
+  app.innerHTML=`${topbar('놀이터')}${rankBar()}
   <div class="hub">
-    <button class="gcard" data-go="map"><span class="art" style="background:#9ED3F5">🌍</span><b>세계 시계 지도</b><span>미국은 지금 몇 시? 프랑스는? 낮인 나라, 밤인 나라를 찾아봐요.</span></button>
-    <button class="gcard" data-go="runway"><span class="art" style="background:#14171D">🛫</span><b>활주로 이착륙</b><span>세윤 기장님, 이륙하고 사뿐히 착륙해 봐요.</span></button>
-    <button class="gcard" data-go="trip"><span class="art" style="background:#FFC72C">✈️</span><b>세윤항공 여행</b><span>인천에서 이륙해 도쿄, 파리, 뉴욕, 시드니로 날아가요.</span></button>
+    <button class="gcard" data-go="runway"><span class="art" style="background:#14171D">🛫</span><b>활주로 이착륙</b><span>조종석에 앉아 출력 레버를 밀고, 조종간을 당겨 이륙해요.</span></button>
+    <button class="gcard" data-go="trip"><span class="art" style="background:#FFC72C">✈️</span><b>${kidName()}항공 여행</b><span>인천에서 이륙해 세계 ${DESTS.length}개 도시로! 열쇠를 모으면 새 나라가 열려요.</span></button>
+    <button class="gcard" data-go="map"><span class="art" style="background:#9ED3F5">🌍</span><b>세계 시계 지도</b><span>미국은 지금 몇 시? 낮인 나라, 밤인 나라를 찾아봐요.</span></button>
+    <button class="gcard" data-go="quiz"><span class="art" style="background:#B48AF0">❓</span><b>지도 퀴즈</b><span>밤인 도시 찾기, 시차 맞히기, 국기 맞히기!${T.travel.best.quiz?` 최고 ${T.travel.best.quiz}점`:''}</span></button>
+    <button class="gcard" data-go="passport"><span class="art" style="background:#F5B0C0">🛂</span><b>내 여권</b><span>${T.travel.stamps.length?`도장 ${T.travel.stamps.length}개 · 여행 별 ⭐ ${T.travel.stars}`:'여행을 다녀오면 도장이 찍혀요.'}</span></button>
   </div>
-  <div class="card" style="margin-top:16px"><h3>내 여권</h3>${passport().length?`<div class="passport">${passport().slice(0,8).map(stampHtml).join('')}</div>`:'<p class="empty">여행을 다녀오면 도장이 찍혀요.</p>'}</div>`;
-  $$('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
+  <p class="helptxt">🔑 열쇠: 공부방 포도알 1알 = 열쇠 1개, 놀이에서 모은 여행 별 30개 = 열쇠 1개. ${T.online?'기록은 가족 모두의 기기에 같이 저장돼요.':'가족 코드가 없어서 이 기기에만 저장돼요.'}</p>`;
+  $$('[data-go]').forEach(b=>b.onclick=()=>{Sfx.click();go(b.dataset.go)});
 }
 function renderRunway(){
-  app.innerHTML=`${topbar('활주로 이착륙','hub')}
-  <div class="hub"><button class="gcard" data-m="takeoff"><span class="art" style="background:#9ED3F5">🛫</span><b>이륙하기</b><span>출력을 올려 속도를 내고, 초록 칸에서 기수를 올려요.</span></button>
-  <button class="gcard" data-m="landing"><span class="art" style="background:#14171D">🛬</span><b>착륙하기</b><span>하얀 불 2개, 빨간 불 2개를 맞추며 활주로에 내려요.</span></button></div>`;
-  $$('[data-m]').forEach(b=>b.onclick=()=>startFlight(b.dataset.m));
+  const lv=(m)=>LEVELS[m].map((L,i)=>{const k=lvlKey(m,i),b=T.travel.best[k]||0,open=unlockedLv(m,i),st=starsOf(b);
+    return `<button class="lvl${open?'':' lock'}" data-m="${m}" data-l="${i}" ${open?'':'aria-disabled="true"'}><b>${open?'':'🔒 '}${i+1}. ${L.n}</b><small>${open?L.d:'앞 단계를 성공하면 열려요'}</small>
+      <div class="st">${[0,1,2].map(j=>j<st?'⭐':'☆').join('')}${b?` <small style="display:inline">${b}점</small>`:''}</div></button>`}).join('');
+  app.innerHTML=`${topbar('활주로 이착륙','hub')}${rankBar()}
+  <div class="card"><h3>🛫 이륙하기</h3><div class="levels">${lv('takeoff')}</div></div>
+  <div class="card"><h3>🛬 착륙하기</h3><div class="levels">${lv('landing')}</div></div>
+  <p class="helptxt">처음 해 보는 단계는 짧은 설명이 먼저 나와요. 비행 중 ❓를 누르면 다시 볼 수 있어요.</p>`;
+  $$('[data-m]').forEach(b=>b.onclick=()=>{const m=b.dataset.m,i=+b.dataset.l;if(!unlockedLv(m,i)){toastG('앞 단계를 먼저 성공해 봐요!');Sfx.bad();return}Sfx.click();startFlight(m,{level:i})});
 }
 function renderTrip(){
-  app.innerHTML=`${topbar('세윤항공 여행','hub')}
-  <div class="card"><h3>어디로 갈까요?</h3><div class="dests">${DESTS.map(d=>`<button data-d="${d.id}"><span class="f">${d.fl}</span><b>${d.nm}</b><span>${d.ct} · ${d.code}</span></button>`).join('')}</div>
-  <p class="helptxt">인천공항(ICN)에서 직접 이륙해서 출발해요. 먼 나라일수록 오래 날아가요.</p></div>`;
-  $$('[data-d]').forEach(b=>b.onclick=()=>startFlight('trip',DESTS.find(d=>d.id===b.dataset.d)));
+  const k=keysNow();
+  app.innerHTML=`${topbar(kidName()+'항공 여행','hub')}${rankBar()}
+  <div class="card"><h3>어디로 갈까요?</h3><div class="dests">${DESTS.map(d=>{const open=k>=d.need;
+    return `<button data-d="${d.id}" class="${open?'':'lock'}"><span class="f">${open?d.fl:'🔒'}</span><b>${d.nm}</b><span>${d.ct} · ${d.code}</span>${open?'':`<span class="lk">🔑 ${d.need}개 필요 (지금 ${k}개)</span>`}</button>`}).join('')}</div>
+  <p class="helptxt">인천공항(ICN)에서 직접 이륙해서 출발해요. 공부방에서 포도알을 받으면 열쇠가 생겨 새 나라가 열려요.</p></div>`;
+  $$('[data-d]').forEach(b=>b.onclick=()=>{const d=DESTS.find(x=>x.id===b.dataset.d);if(keysNow()<d.need){Sfx.bad();toastG(`열쇠가 ${d.need-keysNow()}개 더 필요해요. 공부방에서 포도알을 모아 봐요!`);return}Sfx.click();startFlight('trip',{dest:d})});
 }
 function renderPassport(){
-  const pp=passport();
-  app.innerHTML=`${topbar('내 여권','hub')}<div class="card"><h3>찍힌 도장 ${pp.length}개</h3>${pp.length?`<div class="passport">${pp.map(stampHtml).join('')}</div>`:'<p class="empty">아직 도장이 없어요.</p>'}</div>`;
+  const pp=T.travel.stamps,seen=new Set(pp.map(s=>s.code));
+  app.innerHTML=`${topbar('내 여권','hub')}${rankBar()}
+  <div class="card"><h3>모은 나라 ${DESTS.filter(d=>seen.has(d.code)).length} / ${DESTS.length}</h3><div class="dests">${DESTS.map(d=>`<div style="text-align:center;padding:6px;border-radius:12px;${seen.has(d.code)?'':'opacity:.35;filter:grayscale(1)'}"><span style="font-size:30px">${d.fl}</span><br>${d.nm}</div>`).join('')}</div></div>
+  <div class="card"><h3>찍힌 도장 ${pp.length}개 · 여행 별 ⭐ ${T.travel.stars||0}</h3>${pp.length?`<div class="passport">${pp.map(stampHtml).join('')}</div>`:'<p class="empty">아직 도장이 없어요.</p>'}</div>`;
 }
-function go(v){stopLoop();clearInterval(mapTimer);try{speechSynthesis.cancel()}catch(e){}
-  ({hub:renderHub,map:renderMap,runway:renderRunway,trip:renderTrip,passport:renderPassport})[v]();window.scrollTo(0,0)}
-{const h=location.hash.slice(1);go(['map','runway','trip','passport'].includes(h)?h:'hub')}
+function go(v){endFlight();clearInterval(mapTimer);try{speechSynthesis.cancel()}catch(e){}CUR=v;
+  ({hub:renderHub,map:renderMap,quiz:renderQuiz,runway:renderRunway,trip:renderTrip,passport:renderPassport})[v]();window.scrollTo(0,0)}
+addEventListener('pointerdown',()=>Sfx.unlock(),{once:true});
+(async()=>{const h=location.hash.slice(1),v=['map','quiz','runway','trip','passport'].includes(h)?h:'hub';
+  app.innerHTML='<p class="loading">✈️ 놀이터를 여는 중…</p>';await loadTravel();go(v)})();
 try{localStorage.setItem('hb-tab','play')}catch(e){} // 우리집으로 돌아가면 놀이 탭이 열린다
+if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});
 </script>
 </body>
 </html>
